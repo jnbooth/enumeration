@@ -204,7 +204,7 @@ macro_rules! enums {
         #[cfg(debug_assertions)]
         let _ = [$($i),+]; // all items are same type
         #[allow(unused_imports)]
-        use $crate::enums::{Enum, EnumSet};
+        use $crate::{Enum, EnumSet};
         EnumSet{raw: 0$(|$i.bit())*}
     });
 }
