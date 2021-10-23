@@ -197,6 +197,7 @@ where
     }
 }
 
+#[macro_export]
 macro_rules! enums {
     () => ($crate::EnumSet{raw: $crate::Wordlike::ZERO});
     ($($i:expr),+ $(,)?) => ({
