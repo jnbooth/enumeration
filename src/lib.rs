@@ -1,4 +1,5 @@
-#[cfg(test)] #[macro_use]
+#[cfg(test)]
+#[macro_use]
 extern crate enumeration_derive;
 
 use std::fmt::Debug;
@@ -111,6 +112,64 @@ impl Enum for bool {
     }
     fn index(self) -> usize {
         self as usize
+    }
+}
+
+pub trait Expand: Sized {
+    type Expanded: From<Self>;
+}
+macro_rules! impl_expand {
+    ($t:ty, $ex:ty) => {
+        impl Expand for $t {
+            type Expanded = $ex;
+        }
+    };
+}
+impl_expand!(u8, u16);
+impl_expand!(i8, i16);
+impl_expand!(u16, u32);
+impl_expand!(i16, i32);
+impl_expand!(u32, u64);
+impl_expand!(i32, i64);
+impl_expand!(u64, u128);
+impl_expand!(i64, i128);
+
+impl<E: Enum> Enum for Option<E>
+where
+    E::Rep: Expand + Wordlike,
+{
+    type Rep = <E::Rep as Expand>::Expanded;
+
+    const SIZE: usize = E::SIZE + 1;
+
+    const MIN: Self = None;
+
+    const MAX: Self = Some(E::MAX);
+
+    fn succ(self) -> Option<Self> {
+        match self {
+            None => Some(Some(E::MIN)),
+            Some(e) => e.succ().map(Some),
+        }
+    }
+
+    fn pred(self) -> Option<Self> {
+        self.map(|e| e.pred())
+    }
+
+    fn bit(self) -> Self::Rep {
+        match self {
+            None => E::MIN.bit(),
+            Some(e) => e.bit().incr(),
+        }
+        .into()
+    }
+
+    fn index(self) -> usize {
+        match self {
+            None => 0,
+            Some(e) => e.index() + 1,
+        }
     }
 }
 

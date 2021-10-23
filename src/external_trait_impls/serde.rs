@@ -12,7 +12,6 @@ where
     K: Enum + Serialize + Copy + Ord,
     V: Serialize,
 {
-    #[inline]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_map(self)
     }
@@ -49,7 +48,6 @@ where
                 formatter.write_str("a map")
             }
 
-            #[inline]
             fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
                 let mut values = EnumMap::new();
                 while let Some((k, v)) = map.next_entry()? {

@@ -10,6 +10,7 @@ pub trait Wordlike {
     const ZERO: Self;
     // This is an associated function in order to avoid conflict with a method on the inner type.
     fn count_ones(this: Self) -> u32;
+    fn incr(self) -> Self;
 }
 
 macro_rules! impl_word {
@@ -19,6 +20,10 @@ macro_rules! impl_word {
             #[inline]
             fn count_ones(this: Self) -> u32 {
                 this.count_ones()
+            }
+            #[inline]
+            fn incr(self) -> Self {
+                self + 1
             }
         }
     };
@@ -97,7 +102,6 @@ where
 {
     type Output = Self;
 
-    #[inline]
     fn not(self) -> Self::Output {
         Self { raw: !self.raw }
     }
@@ -110,7 +114,6 @@ macro_rules! bitop {
             T::Rep: $t<Output = T::Rep>,
         {
             type Output = Self;
-            #[inline]
             fn $f(self, other: Self) -> Self::Output {
                 Self {
                     raw: self.raw.$f(other.raw),
@@ -122,7 +125,6 @@ macro_rules! bitop {
             T::Rep: $t<Output = T::Rep>,
         {
             type Output = Self;
-            #[inline]
             fn $f(self, other: T) -> Self::Output {
                 Self {
                     raw: self.raw.$f(other.bit()),
@@ -137,7 +139,6 @@ macro_rules! bitassign {
         where
             T::Rep: $t,
         {
-            #[inline]
             fn $f(&mut self, other: Self) {
                 self.raw.$f(other.raw)
             }
@@ -146,7 +147,6 @@ macro_rules! bitassign {
         where
             T::Rep: $t,
         {
-            #[inline]
             fn $f(&mut self, other: T) {
                 self.raw.$f(other.bit())
             }
@@ -213,7 +213,6 @@ impl<T: Enum> EnumSet<T>
 where
     T::Rep: Wordlike,
 {
-    #[inline]
     pub fn new() -> Self {
         enums![]
     }
@@ -284,25 +283,21 @@ where
 {
     type Item = T;
 
-    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let set = self.set;
         self.iter.find(move |&x| set.contains(x))
     }
 
-    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let count = Wordlike::count_ones(self.set.raw) as usize;
         (0, Some(min(self.iter.len(), count)))
     }
 
-    #[inline]
     fn count(self) -> usize {
         let set = self.set;
         self.iter.map(move |x| set.contains(x) as usize).sum()
     }
 
-    #[inline]
     fn fold<Acc, Fold>(self, init: Acc, mut fold: Fold) -> Acc
     where
         Fold: FnMut(Acc, Self::Item) -> Acc,
