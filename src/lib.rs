@@ -5,6 +5,7 @@ extern crate enumeration_derive;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::iter::{ExactSizeIterator, FusedIterator, Iterator};
+use std::num::*;
 use std::ops::{Bound, RangeBounds};
 
 #[macro_use]
@@ -140,6 +141,18 @@ impl_expand!(u32, u64);
 impl_expand!(i32, i64);
 impl_expand!(u64, u128);
 impl_expand!(i64, i128);
+impl_expand!(NonZeroU8, u8);
+impl_expand!(NonZeroI8, i8);
+impl_expand!(NonZeroU16, u16);
+impl_expand!(NonZeroI16, i16);
+impl_expand!(NonZeroU32, u32);
+impl_expand!(NonZeroI32, i32);
+impl_expand!(NonZeroU64, u64);
+impl_expand!(NonZeroI64, i64);
+impl_expand!(NonZeroU128, u128);
+impl_expand!(NonZeroI128, i128);
+impl_expand!(NonZeroUsize, usize);
+impl_expand!(NonZeroIsize, isize);
 
 impl<E: Enum> Enum for Option<E>
 where
