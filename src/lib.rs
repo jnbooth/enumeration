@@ -113,6 +113,13 @@ impl Enum for bool {
     fn index(self) -> usize {
         self as usize
     }
+    fn from_index(i: usize) -> Option<Self> {
+        match i {
+            0 => Some(false),
+            1 => Some(true),
+            _ => None,
+        }
+    }
 }
 
 pub trait Expand: Sized {
@@ -169,6 +176,14 @@ where
         match self {
             None => 0,
             Some(e) => e.index() + 1,
+        }
+    }
+
+    fn from_index(i: usize) -> Option<Self> {
+        if i == 0 {
+            Some(None)
+        } else {
+            E::from_index(i - 1).map(Some)
         }
     }
 }
