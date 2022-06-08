@@ -131,7 +131,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
         }
 
         impl #impl_generics #name #ty_generics #where_clause {
-            pub const fn bit(self) -> #idx {
+            pub const fn bit(self) -> #rep {
                 1 << (self as #idx)
             }
 
@@ -156,4 +156,3 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
     };
     TokenStream::from(expanded)
 }
-

@@ -44,8 +44,7 @@ impl_word!(i32);
 
 #[repr(transparent)]
 pub struct EnumSet<T: Enum> {
-    // FIXME(#57563) replace with `const fn from_raw(T::Rep)` if const_fn_trait_bound is stabilized
-    pub raw: T::Rep,
+    raw: T::Rep,
 }
 
 impl<T: Enum> Copy for EnumSet<T> where T::Rep: Copy {}
@@ -205,7 +204,7 @@ macro_rules! enums {
         let _ = [$($i),+]; // all items are same type
         #[allow(unused_imports)]
         use $crate::{Enum, EnumSet};
-        EnumSet{raw: 0$(|$i.bit())*}
+        EnumSet::from_raw(0$(|$i.bit())*)
     });
 }
 
@@ -213,8 +212,10 @@ impl<T: Enum> EnumSet<T>
 where
     T::Rep: Wordlike,
 {
-    pub fn new() -> Self {
-        enums![]
+    pub const fn new() -> Self {
+        Self {
+            raw: Wordlike::ZERO,
+        }
     }
 
     pub fn clear(&mut self) {
@@ -234,17 +235,27 @@ where
     {
         self.raw &= !x.bit()
     }
+
     pub fn contains(&self, x: T) -> bool
     where
         T::Rep: BitAnd<Output = T::Rep> + Eq + Copy,
     {
         self.raw & x.bit() != Wordlike::ZERO
     }
+
+    pub const fn from_raw(raw: T::Rep) -> Self {
+        Self { raw }
+    }
+
     pub fn into_raw(self) -> T::Rep {
         self.raw
     }
-    pub fn from_raw(raw: T::Rep) -> Self {
-        Self { raw }
+
+    pub const fn as_raw(&self) -> T::Rep
+    where
+        T::Rep: Copy,
+    {
+        self.raw
     }
 }
 
@@ -324,6 +335,7 @@ mod tests {
 
     #[test]
     fn test_enumerate() {
+        let _: EnumSet<DemoEnum> = enums![DemoEnum::A, DemoEnum::C];
         assert_eq!(
             EnumSet { raw: !0 }.into_iter().collect::<Vec<DemoEnum>>(),
             Enum::enumerate(..).collect::<Vec<DemoEnum>>()

@@ -34,9 +34,11 @@ impl<K: Enum, V> EnumMap<K, V> {
     pub fn remove(&mut self, k: K) -> Option<V> {
         self.inner[k.index()].take()
     }
+
     pub fn get(&self, k: K) -> Option<&V> {
         self.inner[k.index()].as_ref()
     }
+
     pub fn get_mut(&mut self, k: K) -> Option<&mut V> {
         self.inner[k.index()].as_mut()
     }
