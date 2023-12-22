@@ -1,0 +1,15 @@
+[package]
+name = "enumeration"
+version = "0.1.0"
+edition = "2021"
+authors = ["Joshua Booth <joshua.n.booth@gmail.com>"]
+publish = false
+description = "Enumerable enums with bitwise representation"
+repository = "https://github.com/jnbooth/enumeration"
+features = ["serde"]
+
+[dependencies]
+serde = { version = "1.0.137", optional = true }
+
+[dev-dependencies]
+enumeration_derive = { path = "../enumeration_derive" }

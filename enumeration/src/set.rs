@@ -198,7 +198,7 @@ where
 
 #[macro_export]
 macro_rules! enums {
-    () => ($crate::EnumSet{raw: $crate::Wordlike::ZERO});
+    () => ($crate::EnumSet::from_raw($crate::Wordlike::ZERO));
     ($($i:expr),+ $(,)?) => ({
         #[cfg(debug_assertions)]
         let _ = [$($i),+]; // all items are same type
