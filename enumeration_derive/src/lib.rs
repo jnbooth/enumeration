@@ -60,36 +60,6 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
     let min_bound = &input.variants.first().unwrap().ident;
     let max_bound = &input.variants.last().unwrap().ident;
 
-    let to_strs: proc_macro2::TokenStream = input
-        .variants
-        .iter()
-        .map(|x| {
-            let ident = &x.ident;
-            let tostr = x.ident.to_string();
-            quote!(#name::#ident => #tostr,)
-        })
-        .collect();
-
-    let from_strs: proc_macro2::TokenStream = input
-        .variants
-        .iter()
-        .map(|x| {
-            let fromstr = x.ident.to_string();
-            let ident = &x.ident;
-            quote!(#fromstr => Some(#name::#ident),)
-        })
-        .collect();
-
-    let from_strs_ci: proc_macro2::TokenStream = input
-        .variants
-        .iter()
-        .map(|x| {
-            let fromstr = x.ident.to_string().to_lowercase();
-            let ident = &x.ident;
-            quote!(#fromstr => Some(#name::#ident),)
-        })
-        .collect();
-
     let expanded = quote! {
         impl #impl_generics Enum for #name #ty_generics #where_clause {
             type Rep = #rep;
@@ -133,24 +103,6 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
         impl #impl_generics #name #ty_generics #where_clause {
             pub const fn bit(self) -> #rep {
                 1 << (self as #idx)
-            }
-
-            pub const fn to_str(self) -> &'static str {
-                match self {
-                    #to_strs
-                }
-            }
-            pub fn parse(s: &str) -> Option<Self> {
-                match s {
-                    #from_strs
-                    _ => None,
-                }
-            }
-            pub fn parse_ci(s: &str) -> Option<Self> {
-                match s.to_lowercase().as_str() {
-                    #from_strs_ci
-                    _ => None,
-                }
             }
         }
     };

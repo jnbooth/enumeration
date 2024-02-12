@@ -5,7 +5,6 @@ extern crate enumeration_derive;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::iter::{ExactSizeIterator, FusedIterator, Iterator};
-use std::num::*;
 use std::ops::{Bound, RangeBounds};
 
 #[macro_use]
@@ -119,84 +118,6 @@ impl Enum for bool {
             0 => Some(false),
             1 => Some(true),
             _ => None,
-        }
-    }
-}
-
-pub trait Expand: Sized {
-    type Expanded: From<Self>;
-}
-macro_rules! impl_expand {
-    ($t:ty, $ex:ty) => {
-        impl Expand for $t {
-            type Expanded = $ex;
-        }
-    };
-}
-impl_expand!(u8, u16);
-impl_expand!(i8, i16);
-impl_expand!(u16, u32);
-impl_expand!(i16, i32);
-impl_expand!(u32, u64);
-impl_expand!(i32, i64);
-impl_expand!(u64, u128);
-impl_expand!(i64, i128);
-impl_expand!(NonZeroU8, u8);
-impl_expand!(NonZeroI8, i8);
-impl_expand!(NonZeroU16, u16);
-impl_expand!(NonZeroI16, i16);
-impl_expand!(NonZeroU32, u32);
-impl_expand!(NonZeroI32, i32);
-impl_expand!(NonZeroU64, u64);
-impl_expand!(NonZeroI64, i64);
-impl_expand!(NonZeroU128, u128);
-impl_expand!(NonZeroI128, i128);
-impl_expand!(NonZeroUsize, usize);
-impl_expand!(NonZeroIsize, isize);
-
-impl<E: Enum> Enum for Option<E>
-where
-    E::Rep: Expand + Wordlike,
-{
-    type Rep = <E::Rep as Expand>::Expanded;
-
-    const SIZE: usize = E::SIZE + 1;
-
-    const MIN: Self = None;
-
-    const MAX: Self = Some(E::MAX);
-
-    fn succ(self) -> Option<Self> {
-        match self {
-            None => Some(Some(E::MIN)),
-            Some(e) => e.succ().map(Some),
-        }
-    }
-
-    fn pred(self) -> Option<Self> {
-        self.map(|e| e.pred())
-    }
-
-    fn bit(self) -> Self::Rep {
-        match self {
-            None => E::MIN.bit(),
-            Some(e) => e.bit().incr(),
-        }
-        .into()
-    }
-
-    fn index(self) -> usize {
-        match self {
-            None => 0,
-            Some(e) => e.index() + 1,
-        }
-    }
-
-    fn from_index(i: usize) -> Option<Self> {
-        if i == 0 {
-            Some(None)
-        } else {
-            E::from_index(i - 1).map(Some)
         }
     }
 }
@@ -334,13 +255,9 @@ mod tests {
                 let our_count = DemoEnum::enumerate(x..=y).count();
                 let std_count = DemoEnum::enumerate(x..=y).fold(0, |count, _| count + 1);
                 assert_eq!(
-                    our_count,
-                    std_count,
-                    "for {}..={}, {} != {}",
-                    x.to_str(),
-                    y.to_str(),
-                    our_count,
-                    std_count
+                    our_count, std_count,
+                    "for {:?}..={:?}, {} != {}",
+                    x, y, our_count, std_count
                 );
             }
         }
