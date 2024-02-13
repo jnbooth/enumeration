@@ -23,18 +23,9 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
 
     let size = input.variants.len();
 
-    let rep = if size <= 8 {
-        quote!(u8)
-    } else if size <= 16 {
-        quote!(u16)
-    } else if size <= 32 {
-        quote!(u32)
-    } else if size <= 64 {
-        quote!(u64)
-    } else if size <= 128 {
-        quote!(u128)
-    } else {
-        panic!("Too many variants")
+    let rep = match rep_for_size(size) {
+        Some(rep) => rep,
+        None => panic!("Too many variants"),
     };
 
     let idx = input
@@ -106,5 +97,72 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
             }
         }
     };
+
+    let option_rep = match rep_for_size(size + 1) {
+        Some(option_rep) => option_rep,
+        None => return TokenStream::from(expanded),
+    };
+
+    let expanded = quote! {
+        #expanded
+
+        impl #impl_generics Enum for Option<#name> #ty_generics #where_clause {
+            type Rep = #option_rep;
+            const SIZE: usize = #name::SIZE + 1;
+            const MIN: Self = None;
+            const MAX: Self = Some(#name::MAX);
+
+            fn succ(self) -> Option<Self> {
+                match self {
+                    None => Some(Some(#name::MIN)),
+                    Some(e) => e.succ().map(Some),
+                }
+            }
+
+            fn pred(self) -> Option<Self> {
+                self.map(|e| e.pred())
+            }
+
+            fn bit(self) -> Self::Rep {
+                match self {
+                    None => #name::MIN.bit(),
+                    Some(e) => e.bit().incr(),
+                }
+                .into()
+            }
+
+            fn index(self) -> usize {
+                match self {
+                    None => 0,
+                    Some(e) => e.index() + 1,
+                }
+            }
+
+            fn from_index(i: usize) -> Option<Self> {
+                if i == 0 {
+                    Some(None)
+                } else {
+                    #name::from_index(i - 1).map(Some)
+                }
+            }
+        }
+    };
+
     TokenStream::from(expanded)
+}
+
+fn rep_for_size(size: usize) -> Option<proc_macro2::TokenStream> {
+    if size <= 8 {
+        Some(quote!(u8))
+    } else if size <= 16 {
+        Some(quote!(u16))
+    } else if size <= 32 {
+        Some(quote!(u32))
+    } else if size <= 64 {
+        Some(quote!(u64))
+    } else if size <= 128 {
+        Some(quote!(u128))
+    } else {
+        None
+    }
 }
