@@ -4,43 +4,8 @@ use std::hash::{Hash, Hasher};
 use std::iter::{ExactSizeIterator, FromIterator, FusedIterator, Iterator};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
 
-use super::{Enum, Enumeration};
-
-pub trait Wordlike {
-    const ZERO: Self;
-    // This is an associated function in order to avoid conflict with a method on the inner type.
-    fn count_ones(this: Self) -> u32;
-    fn incr(self) -> Self;
-}
-
-macro_rules! impl_word {
-    ($n: ty) => {
-        impl Wordlike for $n {
-            const ZERO: Self = 0;
-            #[inline]
-            fn count_ones(this: Self) -> u32 {
-                this.count_ones()
-            }
-            #[inline]
-            fn incr(self) -> Self {
-                self + 1
-            }
-        }
-    };
-}
-
-impl_word!(isize);
-impl_word!(u128);
-impl_word!(u16);
-impl_word!(i128);
-impl_word!(i16);
-impl_word!(u64);
-impl_word!(u8);
-impl_word!(i64);
-impl_word!(i8);
-impl_word!(u32);
-impl_word!(usize);
-impl_word!(i32);
+use crate::enum_trait::{Enum, Enumeration};
+use crate::wordlike::Wordlike;
 
 #[repr(transparent)]
 pub struct EnumSet<T: Enum> {
@@ -199,12 +164,13 @@ where
 #[macro_export]
 macro_rules! enums {
     () => ($crate::EnumSet::from_raw($crate::Wordlike::ZERO));
-    ($($i:expr),+ $(,)?) => ({
+    ($i1:expr $(,)?) => ($crate::__private::construct_set($i1.bit(), $i1));
+    ($i1:expr, $($i:expr),+ $(,)?) => ({
         #[cfg(debug_assertions)]
-        let _ = [$($i),+]; // all items are same type
+        let _ = [$i1, $($i),+]; // all items are same type
         #[allow(unused_imports)]
-        use $crate::{Enum, EnumSet};
-        EnumSet::from_raw(0$(|$i.bit())*)
+        use $crate::Enum;
+        $crate::__private::construct_set($i1.bit()$(|$i.bit())*, $i1)
     });
 }
 
@@ -259,8 +225,18 @@ where
     }
 }
 
-impl<T: Enum + Copy + Ord> IntoIterator for EnumSet<T>
+#[doc(hidden)]
+pub mod __private {
+    use super::*;
+
+    pub const fn construct_set<T: Enum>(raw: T::Rep, _type_holder: T) -> EnumSet<T> {
+        EnumSet { raw }
+    }
+}
+
+impl<T: Enum> IntoIterator for EnumSet<T>
 where
+    T: Copy + Ord,
     T::Rep: BitAnd<Output = T::Rep> + Wordlike + Eq + Copy,
 {
     type Item = T;
@@ -274,8 +250,9 @@ where
     }
 }
 
-impl<T: Debug + Enum> Debug for EnumSet<T>
+impl<T: Enum> Debug for EnumSet<T>
 where
+    T: Debug,
     EnumSet<T>: IntoIterator<Item = T> + Copy,
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -288,8 +265,9 @@ pub struct EnumIter<T: Enum> {
     iter: Enumeration<T>,
 }
 
-impl<T: Enum + Copy + Ord> Iterator for EnumIter<T>
+impl<T: Enum> Iterator for EnumIter<T>
 where
+    T: Copy + Ord,
     T::Rep: BitAnd<Output = T::Rep> + Wordlike + Eq + Copy,
 {
     type Item = T;
@@ -328,8 +306,11 @@ impl<T: Enum> FusedIterator for EnumIter<T> where EnumIter<T>: Iterator<Item = T
 
 #[cfg(test)]
 mod tests {
-    use super::super::tests::*;
     use super::*;
+
+    #[rustfmt::skip] #[allow(dead_code)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Enum)]
+    pub enum DemoEnum { A, B, C, D, E, F, G, H, I, J }
 
     // EnumSet tests
 

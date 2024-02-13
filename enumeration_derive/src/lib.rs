@@ -106,45 +106,8 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #expanded
 
-        impl #impl_generics Enum for Option<#name> #ty_generics #where_clause {
-            type Rep = #option_rep;
-            const SIZE: usize = #name::SIZE + 1;
-            const MIN: Self = None;
-            const MAX: Self = Some(#name::MAX);
-
-            fn succ(self) -> Option<Self> {
-                match self {
-                    None => Some(Some(#name::MIN)),
-                    Some(e) => e.succ().map(Some),
-                }
-            }
-
-            fn pred(self) -> Option<Self> {
-                self.map(|e| e.pred())
-            }
-
-            fn bit(self) -> Self::Rep {
-                match self {
-                    None => #name::MIN.bit(),
-                    Some(e) => e.bit().incr(),
-                }
-                .into()
-            }
-
-            fn index(self) -> usize {
-                match self {
-                    None => 0,
-                    Some(e) => e.index() + 1,
-                }
-            }
-
-            fn from_index(i: usize) -> Option<Self> {
-                if i == 0 {
-                    Some(None)
-                } else {
-                    #name::from_index(i - 1).map(Some)
-                }
-            }
+        impl #impl_generics crate::optionable::OptionableEnum for #name #ty_generics #where_clause {
+            type RepForOptional = #option_rep;
         }
     };
 

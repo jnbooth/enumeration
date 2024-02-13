@@ -3,7 +3,7 @@ use std::iter::{FilterMap, Iterator, Zip};
 use std::marker::PhantomData;
 use std::{slice, vec};
 
-use super::{Enum, Enumeration};
+use crate::enum_trait::{Enum, Enumeration};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EnumMap<K, V> {
@@ -110,10 +110,4 @@ impl<'a, K: Enum + Copy + Ord, V> IntoIterator for &'a mut EnumMap<K, V> {
             .zip(&mut self.inner)
             .filter_map(|(x, m_y)| m_y.as_mut().map(|y| (x, y)))
     }
-}
-
-#[cfg(test)]
-mod tests {
-    //use super::*;
-    //use super::super::tests::*;
 }
