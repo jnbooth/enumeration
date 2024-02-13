@@ -12,6 +12,42 @@ pub struct EnumSet<T: Enum> {
     raw: T::Rep,
 }
 
+impl<T: Enum> EnumSet<T>
+where
+    T::Rep: Wordlike,
+{
+    pub const fn new() -> Self {
+        Self {
+            raw: Wordlike::ZERO,
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.raw = Wordlike::ZERO;
+    }
+
+    pub fn insert(&mut self, x: T)
+    where
+        T::Rep: BitOrAssign,
+    {
+        self.raw |= x.bit()
+    }
+
+    pub fn remove(&mut self, x: T)
+    where
+        T::Rep: BitAndAssign + Not<Output = T::Rep>,
+    {
+        self.raw &= !x.bit()
+    }
+
+    pub fn contains(&self, x: T) -> bool
+    where
+        T::Rep: BitAnd<Output = T::Rep> + Eq + Copy,
+    {
+        self.raw & x.bit() != Wordlike::ZERO
+    }
+}
+
 impl<T: Enum> Copy for EnumSet<T> where T::Rep: Copy {}
 
 impl<T: Enum> Clone for EnumSet<T>
@@ -161,9 +197,18 @@ where
     }
 }
 
+#[doc(hidden)]
+pub mod __private {
+    use super::*;
+
+    pub const fn construct_set<T: Enum>(raw: T::Rep, _type_holder: T) -> EnumSet<T> {
+        EnumSet { raw }
+    }
+}
+
 #[macro_export]
 macro_rules! enums {
-    () => ($crate::EnumSet::from_raw($crate::Wordlike::ZERO));
+    () => ($crate::EnumSet::new());
     ($i1:expr $(,)?) => ($crate::__private::construct_set($i1.bit(), $i1));
     ($i1:expr, $($i:expr),+ $(,)?) => ({
         #[cfg(debug_assertions)]
@@ -172,66 +217,6 @@ macro_rules! enums {
         use $crate::Enum;
         $crate::__private::construct_set($i1.bit()$(|$i.bit())*, $i1)
     });
-}
-
-impl<T: Enum> EnumSet<T>
-where
-    T::Rep: Wordlike,
-{
-    pub const fn new() -> Self {
-        Self {
-            raw: Wordlike::ZERO,
-        }
-    }
-
-    pub fn clear(&mut self) {
-        self.raw = Wordlike::ZERO;
-    }
-
-    pub fn insert(&mut self, x: T)
-    where
-        T::Rep: BitOrAssign,
-    {
-        self.raw |= x.bit()
-    }
-
-    pub fn remove(&mut self, x: T)
-    where
-        T::Rep: BitAndAssign + Not<Output = T::Rep>,
-    {
-        self.raw &= !x.bit()
-    }
-
-    pub fn contains(&self, x: T) -> bool
-    where
-        T::Rep: BitAnd<Output = T::Rep> + Eq + Copy,
-    {
-        self.raw & x.bit() != Wordlike::ZERO
-    }
-
-    pub const fn from_raw(raw: T::Rep) -> Self {
-        Self { raw }
-    }
-
-    pub fn into_raw(self) -> T::Rep {
-        self.raw
-    }
-
-    pub const fn as_raw(&self) -> T::Rep
-    where
-        T::Rep: Copy,
-    {
-        self.raw
-    }
-}
-
-#[doc(hidden)]
-pub mod __private {
-    use super::*;
-
-    pub const fn construct_set<T: Enum>(raw: T::Rep, _type_holder: T) -> EnumSet<T> {
-        EnumSet { raw }
-    }
 }
 
 impl<T: Enum> IntoIterator for EnumSet<T>

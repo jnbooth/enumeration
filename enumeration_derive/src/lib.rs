@@ -23,7 +23,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
 
     let size = input.variants.len();
 
-    let rep = match rep_for_size(size) {
+    let rep = match rep_for_size(size + 1) {
         Some(rep) => rep,
         None => panic!("Too many variants"),
     };
@@ -95,19 +95,6 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
             pub const fn bit(self) -> #rep {
                 1 << (self as #idx)
             }
-        }
-    };
-
-    let option_rep = match rep_for_size(size + 1) {
-        Some(option_rep) => option_rep,
-        None => return TokenStream::from(expanded),
-    };
-
-    let expanded = quote! {
-        #expanded
-
-        impl #impl_generics crate::optionable::OptionableEnum for #name #ty_generics #where_clause {
-            type RepForOptional = #option_rep;
         }
     };
 

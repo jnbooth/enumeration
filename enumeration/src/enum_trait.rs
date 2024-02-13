@@ -3,6 +3,8 @@ use std::hash::Hash;
 use std::iter::{ExactSizeIterator, FusedIterator, Iterator};
 use std::ops::{Bound, RangeBounds};
 
+use crate::Wordlike;
+
 pub trait Enum: Copy + Ord {
     /// Bitwise representation of the type.
     type Rep;
@@ -106,6 +108,53 @@ impl Enum for bool {
             0 => Some(false),
             1 => Some(true),
             _ => None,
+        }
+    }
+}
+
+impl<T: Enum> Enum for Option<T>
+where
+    T::Rep: Wordlike,
+{
+    type Rep = T::Rep;
+
+    const SIZE: usize = T::SIZE + 1;
+
+    const MIN: Self = None;
+
+    const MAX: Self = Some(T::MAX);
+
+    fn succ(self) -> Option<Self> {
+        match self {
+            None => Some(Some(T::MIN)),
+            Some(e) => e.succ().map(Some),
+        }
+    }
+
+    fn pred(self) -> Option<Self> {
+        self.map(T::pred)
+    }
+
+    fn bit(self) -> Self::Rep {
+        match self {
+            None => T::MIN.bit(),
+            Some(e) => e.bit().incr(),
+        }
+        .into()
+    }
+
+    fn index(self) -> usize {
+        match self {
+            None => 0,
+            Some(e) => e.index() + 1,
+        }
+    }
+
+    fn from_index(i: usize) -> Option<Self> {
+        if i == 0 {
+            Some(None)
+        } else {
+            T::from_index(i - 1).map(Some)
         }
     }
 }

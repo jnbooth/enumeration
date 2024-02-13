@@ -5,7 +5,6 @@ extern crate enumeration_derive;
 #[macro_use]
 mod enum_trait;
 pub use enum_trait::Enum;
-pub mod optionable;
 mod set;
 pub use set::{EnumSet, __private};
 mod map;

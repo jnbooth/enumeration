@@ -120,10 +120,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::enums;
     use serde::de::DeserializeOwned;
 
     use super::*;
-    use crate::enums;
 
     #[rustfmt::skip] #[allow(dead_code)]
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Enum)]
