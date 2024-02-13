@@ -1,6 +1,6 @@
 [package]
 name = "enumeration_derive"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Joshua Booth <joshua.n.booth@gmail.com>"]
 edition = "2018"
 

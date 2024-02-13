@@ -209,7 +209,11 @@ pub mod __private {
 #[macro_export]
 macro_rules! enums {
     () => ($crate::EnumSet::new());
-    ($i1:expr $(,)?) => ($crate::__private::construct_set($i1.bit(), $i1));
+    ($i1:expr $(,)?) => ({
+        #[allow(unused_imports)]
+        use $crate::Enum;
+        $crate::__private::construct_set($i1.bit(), $i1)
+    });
     ($i1:expr, $($i:expr),+ $(,)?) => ({
         #[cfg(debug_assertions)]
         let _ = [$i1, $($i),+]; // all items are same type
