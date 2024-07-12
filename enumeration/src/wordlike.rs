@@ -1,4 +1,17 @@
-pub trait Wordlike {
+use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
+
+pub trait Wordlike:
+    BitAnd<Output = Self>
+    + BitAndAssign
+    + BitOr<Output = Self>
+    + BitOrAssign
+    + BitXor<Output = Self>
+    + BitXorAssign
+    + Copy
+    + Eq
+    + Not<Output = Self>
+    + Ord
+{
     const ZERO: Self;
     fn count_ones(this: Self) -> u32;
     fn incr(self) -> Self;

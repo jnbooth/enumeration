@@ -11,7 +11,6 @@ use crate::{Enum, EnumMap, EnumSet, Wordlike};
 impl<T> Serialize for EnumSet<T>
 where
     T: Enum + Serialize,
-    T::Rep: BitAnd<Output = T::Rep> + Wordlike + Eq + Copy,
 {
     #[cfg_attr(feature = "inline-more", inline)]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -22,7 +21,6 @@ where
 impl<'de, T> Deserialize<'de> for EnumSet<T>
 where
     T: Enum + Deserialize<'de>,
-    T::Rep: Wordlike + BitOrAssign,
 {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct SeqVisitor<T: Enum> {
@@ -32,7 +30,6 @@ where
         impl<'de, T> serde::de::Visitor<'de> for SeqVisitor<T>
         where
             T: Enum + Deserialize<'de>,
-            T::Rep: Wordlike + BitOrAssign,
         {
             type Value = EnumSet<T>;
 

@@ -7,7 +7,7 @@ use crate::Wordlike;
 
 pub trait Enum: Copy + Ord {
     /// Bitwise representation of the type.
-    type Rep;
+    type Rep: Wordlike;
 
     /// Total number of values in the type.
     const SIZE: usize;
@@ -123,10 +123,7 @@ impl Enum for bool {
     }
 }
 
-impl<T: Enum> Enum for Option<T>
-where
-    T::Rep: Wordlike,
-{
+impl<T: Enum> Enum for Option<T> {
     type Rep = T::Rep;
 
     const SIZE: usize = T::SIZE + 1;
