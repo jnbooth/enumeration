@@ -51,6 +51,29 @@ where
     {
         self.raw & x.bit() != Wordlike::ZERO
     }
+
+    #[inline]
+    pub fn inverse(&self) -> Self
+    where
+        T::Rep: Copy + Not<Output = T::Rep> + BitAnd<Output = T::Rep>,
+    {
+        Self {
+            raw: !self.raw & T::Rep::mask(T::SIZE as u32),
+        }
+    }
+
+    #[inline]
+    pub const fn from_raw(raw: T::Rep) -> Self {
+        Self { raw }
+    }
+
+    #[inline]
+    pub const fn to_raw(&self) -> T::Rep
+    where
+        T::Rep: Copy,
+    {
+        self.raw
+    }
 }
 
 impl<T: Enum> Copy for EnumSet<T> where T::Rep: Copy {}
@@ -113,13 +136,13 @@ where
 
 impl<T: Enum> Not for EnumSet<T>
 where
-    T::Rep: Not<Output = T::Rep>,
+    T::Rep: Wordlike + Copy + Not<Output = T::Rep> + BitAnd<Output = T::Rep>,
 {
     type Output = Self;
 
     #[inline]
     fn not(self) -> Self::Output {
-        Self { raw: !self.raw }
+        self.inverse()
     }
 }
 
@@ -329,14 +352,34 @@ mod tests {
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Enum)]
     pub enum DemoEnum { A, B, C, D, E, F, G, H, I, J }
 
+    fn to_vec<T: IntoIterator<Item = DemoEnum>>(set: T) -> Vec<DemoEnum> {
+        set.into_iter().collect()
+    }
+
     // EnumSet tests
 
     #[test]
     fn test_enumerate() {
         let _: EnumSet<DemoEnum> = enums![DemoEnum::A, DemoEnum::C];
-        assert_eq!(
-            EnumSet { raw: !0 }.into_iter().collect::<Vec<DemoEnum>>(),
-            Enum::enumerate(..).collect::<Vec<DemoEnum>>()
-        );
+        assert_eq!(to_vec(EnumSet { raw: !0 }), to_vec(Enum::enumerate(..)));
+    }
+
+    #[test]
+    fn test_inverse() {
+        let set = enums![
+            DemoEnum::A,
+            DemoEnum::C,
+            DemoEnum::H,
+            DemoEnum::I,
+            DemoEnum::J
+        ];
+        let inverse = enums![
+            DemoEnum::B,
+            DemoEnum::D,
+            DemoEnum::E,
+            DemoEnum::F,
+            DemoEnum::G
+        ];
+        assert_eq!(to_vec(set.inverse()), to_vec(inverse))
     }
 }
