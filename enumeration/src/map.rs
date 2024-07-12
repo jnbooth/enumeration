@@ -42,9 +42,7 @@ impl<K: Enum, V> EnumMap<K, V> {
     pub fn get_mut(&mut self, k: K) -> Option<&mut V> {
         self.inner[k.index()].as_mut()
     }
-}
 
-impl<K: Enum + Copy + Ord, V> EnumMap<K, V> {
     pub fn keys(&self) -> impl '_ + Iterator<Item = K> {
         K::enumerate(..).filter(move |x| self.inner[x.index()].is_some())
     }
@@ -67,7 +65,7 @@ impl<K: Enum + Copy + Ord, V> EnumMap<K, V> {
     }
 }
 
-impl<K: Enum + Copy + Ord, V> IntoIterator for EnumMap<K, V> {
+impl<K: Enum, V> IntoIterator for EnumMap<K, V> {
     type Item = (K, V);
     #[allow(clippy::type_complexity)]
     type IntoIter = FilterMap<
@@ -82,7 +80,7 @@ impl<K: Enum + Copy + Ord, V> IntoIterator for EnumMap<K, V> {
     }
 }
 
-impl<'a, K: Enum + Copy + Ord, V> IntoIterator for &'a EnumMap<K, V> {
+impl<'a, K: Enum, V> IntoIterator for &'a EnumMap<K, V> {
     type Item = (K, &'a V);
     #[allow(clippy::type_complexity)]
     type IntoIter = FilterMap<
@@ -97,7 +95,7 @@ impl<'a, K: Enum + Copy + Ord, V> IntoIterator for &'a EnumMap<K, V> {
     }
 }
 
-impl<'a, K: Enum + Copy + Ord, V> IntoIterator for &'a mut EnumMap<K, V> {
+impl<'a, K: Enum, V> IntoIterator for &'a mut EnumMap<K, V> {
     type Item = (K, &'a mut V);
     #[allow(clippy::type_complexity)]
     type IntoIter = FilterMap<

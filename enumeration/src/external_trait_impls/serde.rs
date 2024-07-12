@@ -10,7 +10,7 @@ use crate::{Enum, EnumMap, EnumSet, Wordlike};
 
 impl<T> Serialize for EnumSet<T>
 where
-    T: Enum + Copy + Ord + Serialize,
+    T: Enum + Serialize,
     T::Rep: BitAnd<Output = T::Rep> + Wordlike + Eq + Copy,
 {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -63,7 +63,7 @@ where
 
 impl<K, V> Serialize for EnumMap<K, V>
 where
-    K: Enum + Serialize + Copy + Ord,
+    K: Enum + Serialize,
     V: Serialize,
 {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -71,7 +71,7 @@ where
     }
 }
 
-impl<K: Enum + Copy + Ord, V> FromIterator<(K, V)> for EnumMap<K, V> {
+impl<K: Enum, V> FromIterator<(K, V)> for EnumMap<K, V> {
     fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
         let mut this = EnumMap::new();
         for (k, v) in iter {
@@ -83,7 +83,7 @@ impl<K: Enum + Copy + Ord, V> FromIterator<(K, V)> for EnumMap<K, V> {
 
 impl<'de, K, V> Deserialize<'de> for EnumMap<K, V>
 where
-    K: Enum + Deserialize<'de> + Copy + Ord,
+    K: Enum + Deserialize<'de>,
     V: Deserialize<'de>,
 {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {

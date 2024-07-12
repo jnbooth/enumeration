@@ -174,7 +174,7 @@ where
     }
 }
 
-impl<'a, T: Enum + Copy> FromIterator<&'a T> for EnumSet<T>
+impl<'a, T: Enum> FromIterator<&'a T> for EnumSet<T>
 where
     T::Rep: BitOr<Output = T::Rep> + Wordlike,
 {
@@ -225,7 +225,6 @@ macro_rules! enums {
 
 impl<T: Enum> IntoIterator for EnumSet<T>
 where
-    T: Copy + Ord,
     T::Rep: BitAnd<Output = T::Rep> + Wordlike + Eq + Copy,
 {
     type Item = T;
@@ -256,7 +255,6 @@ pub struct EnumIter<T: Enum> {
 
 impl<T: Enum> Iterator for EnumIter<T>
 where
-    T: Copy + Ord,
     T::Rep: BitAnd<Output = T::Rep> + Wordlike + Eq + Copy,
 {
     type Item = T;
