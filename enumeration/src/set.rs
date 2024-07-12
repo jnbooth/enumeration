@@ -303,6 +303,18 @@ pub struct EnumIter<T: Enum> {
     iter: Enumeration<T>,
 }
 
+impl<T: Enum> Clone for EnumIter<T>
+where
+    T::Rep: Copy,
+{
+    fn clone(&self) -> Self {
+        Self {
+            set: self.set.clone(),
+            iter: self.iter.clone(),
+        }
+    }
+}
+
 impl<T: Enum> Iterator for EnumIter<T>
 where
     T::Rep: BitAnd<Output = T::Rep> + Wordlike + Eq + Copy,
@@ -327,6 +339,7 @@ where
         self.iter.map(move |x| set.contains(x) as usize).sum()
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn fold<Acc, Fold>(self, init: Acc, mut fold: Fold) -> Acc
     where
         Fold: FnMut(Acc, Self::Item) -> Acc,

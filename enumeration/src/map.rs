@@ -56,13 +56,23 @@ impl<K: Enum, V> EnumMap<K, V> {
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
+    pub fn contains_key(&self, k: K) -> bool {
+        self.inner[k.index()].is_some()
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
     pub fn keys(&self) -> impl '_ + Iterator<Item = K> {
-        K::enumerate(..).filter(move |x| self.inner[x.index()].is_some())
+        K::enumerate(..).filter(move |&x| self.contains_key(x))
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
     pub fn values(&self) -> impl Iterator<Item = &V> {
         self.inner.iter().filter_map(Option::as_ref)
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
+    pub fn into_values(self) -> impl Iterator<Item = V> {
+        self.inner.into_iter().filter_map(std::convert::identity)
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
@@ -81,50 +91,49 @@ impl<K: Enum, V> EnumMap<K, V> {
     }
 }
 
+type MapIter<K, I, From, To> = FilterMap<Zip<Enumeration<K>, I>, fn((K, From)) -> Option<(K, To)>>;
+
 impl<K: Enum, V> IntoIterator for EnumMap<K, V> {
     type Item = (K, V);
-    #[allow(clippy::type_complexity)]
-    type IntoIter = FilterMap<
-        Zip<Enumeration<K>, vec::IntoIter<Option<V>>>,
-        fn((K, Option<V>)) -> Option<(K, V)>,
-    >;
+    type IntoIter = MapIter<K, vec::IntoIter<Option<V>>, Option<V>, V>;
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn into_iter(self) -> Self::IntoIter {
         K::enumerate(..)
             .zip(self.inner)
-            .filter_map(|(x, m_y)| m_y.map(|y| (x, y)))
+            .filter_map(|(x, m_y)| match m_y {
+                None => None,
+                Some(y) => Some((x, y)),
+            })
     }
 }
 
 impl<'a, K: Enum, V> IntoIterator for &'a EnumMap<K, V> {
     type Item = (K, &'a V);
-    #[allow(clippy::type_complexity)]
-    type IntoIter = FilterMap<
-        Zip<Enumeration<K>, slice::Iter<'a, Option<V>>>,
-        fn((K, &Option<V>)) -> Option<(K, &V)>,
-    >;
+    type IntoIter = MapIter<K, slice::Iter<'a, Option<V>>, &'a Option<V>, &'a V>;
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn into_iter(self) -> Self::IntoIter {
         K::enumerate(..)
             .zip(&self.inner)
-            .filter_map(|(x, m_y)| m_y.as_ref().map(|y| (x, y)))
+            .filter_map(|(x, m_y)| match m_y {
+                None => None,
+                Some(y) => Some((x, y)),
+            })
     }
 }
 
 impl<'a, K: Enum, V> IntoIterator for &'a mut EnumMap<K, V> {
     type Item = (K, &'a mut V);
-    #[allow(clippy::type_complexity)]
-    type IntoIter = FilterMap<
-        Zip<Enumeration<K>, slice::IterMut<'a, Option<V>>>,
-        fn((K, &mut Option<V>)) -> Option<(K, &mut V)>,
-    >;
+    type IntoIter = MapIter<K, slice::IterMut<'a, Option<V>>, &'a mut Option<V>, &'a mut V>;
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn into_iter(self) -> Self::IntoIter {
         K::enumerate(..)
             .zip(&mut self.inner)
-            .filter_map(|(x, m_y)| m_y.as_mut().map(|y| (x, y)))
+            .filter_map(|(x, m_y)| match m_y {
+                None => None,
+                Some(y) => Some((x, y)),
+            })
     }
 }
