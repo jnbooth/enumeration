@@ -19,17 +19,24 @@ impl<K: Enum, V> Default for EnumMap<K, V> {
 }
 
 impl<K: Enum, V> EnumMap<K, V> {
-    pub fn new() -> Self {
-        let mut inner = Vec::with_capacity(K::SIZE);
-        inner.resize_with(K::SIZE, Default::default);
+    #[inline]
+    pub const fn new() -> Self {
         Self {
-            inner,
+            inner: Vec::new(),
             marker: PhantomData,
         }
     }
 
+    #[inline]
+    pub const fn capacity(&self) -> usize {
+        K::SIZE
+    }
+
     #[cfg_attr(feature = "inline-more", inline)]
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
+        if self.inner.is_empty() {
+            self.inner.resize_with(K::SIZE, Default::default);
+        }
         self.inner[k.index()].replace(v)
     }
 
