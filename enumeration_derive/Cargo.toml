@@ -11,3 +11,9 @@ proc-macro = true
 quote = "1.0"
 syn = { version = "1.0.80", features = ["full"] }
 proc-macro2 = "1.0.30"
+
+[features]
+default = ["inline"]
+
+# Sets #[inline] on derived Enum implementations.
+inline = []

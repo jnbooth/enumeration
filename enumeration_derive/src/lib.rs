@@ -51,6 +51,11 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
     let min_bound = &input.variants.first().unwrap().ident;
     let max_bound = &input.variants.last().unwrap().ident;
 
+    #[cfg(feature = "inline")]
+    let inline = quote!(#[inline]);
+    #[cfg(not(feature = "inline"))]
+    let inline = quote!();
+
     let expanded = quote! {
         impl #impl_generics Enum for #name #ty_generics #where_clause {
             type Rep = #rep;
@@ -58,6 +63,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
             const MIN: Self = #name::#min_bound;
             const MAX: Self = #name::#max_bound;
 
+            #inline
             fn succ(self) -> Option<Self> {
                 if self == #name::#max_bound {
                     None
@@ -66,6 +72,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
                 }
             }
 
+            #inline
             fn pred(self) -> Option<Self> {
                 if self == #name::#min_bound {
                     None
@@ -74,14 +81,17 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
                 }
             }
 
+            #inline
             fn bit(self) -> Self::Rep {
                 1 << (self as #idx)
             }
 
+            #inline
             fn index(self) -> usize {
                 self as usize
             }
 
+            #inline
             fn from_index(i: usize) -> Option<Self> {
                 if i < #size {
                     Some(unsafe { std::mem::transmute(i as #idx) })
@@ -92,6 +102,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
         }
 
         impl #impl_generics #name #ty_generics #where_clause {
+            #inline
             pub const fn bit(self) -> #rep {
                 1 << (self as #idx)
             }

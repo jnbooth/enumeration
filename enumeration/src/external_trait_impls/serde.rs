@@ -13,6 +13,7 @@ where
     T: Enum + Serialize,
     T::Rep: BitAnd<Output = T::Rep> + Wordlike + Eq + Copy,
 {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_seq(*self)
     }
@@ -66,12 +67,14 @@ where
     K: Enum + Serialize,
     V: Serialize,
 {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_map(self)
     }
 }
 
 impl<K: Enum, V> FromIterator<(K, V)> for EnumMap<K, V> {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
         let mut this = EnumMap::new();
         for (k, v) in iter {

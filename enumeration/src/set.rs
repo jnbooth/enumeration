@@ -16,16 +16,19 @@ impl<T: Enum> EnumSet<T>
 where
     T::Rep: Wordlike,
 {
+    #[inline]
     pub const fn new() -> Self {
         Self {
             raw: Wordlike::ZERO,
         }
     }
 
+    #[inline]
     pub fn clear(&mut self) {
         self.raw = Wordlike::ZERO;
     }
 
+    #[inline]
     pub fn insert(&mut self, x: T)
     where
         T::Rep: BitOrAssign,
@@ -33,6 +36,7 @@ where
         self.raw |= x.bit()
     }
 
+    #[inline]
     pub fn remove(&mut self, x: T)
     where
         T::Rep: BitAndAssign + Not<Output = T::Rep>,
@@ -40,6 +44,7 @@ where
         self.raw &= !x.bit()
     }
 
+    #[inline]
     pub fn contains(&self, x: T) -> bool
     where
         T::Rep: BitAnd<Output = T::Rep> + Eq + Copy,
@@ -54,6 +59,7 @@ impl<T: Enum> Clone for EnumSet<T>
 where
     T::Rep: Copy,
 {
+    #[inline]
     fn clone(&self) -> Self {
         *self
     }
@@ -63,8 +69,14 @@ impl<T: Enum> PartialEq for EnumSet<T>
 where
     T::Rep: PartialEq,
 {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.raw == other.raw
+    }
+
+    #[inline]
+    fn ne(&self, other: &Self) -> bool {
+        self.raw != other.raw
     }
 }
 impl<T: Enum> Eq for EnumSet<T> where T::Rep: Eq {}
@@ -73,6 +85,7 @@ impl<T: Enum> PartialOrd for EnumSet<T>
 where
     T::Rep: PartialOrd,
 {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.raw.partial_cmp(&other.raw)
     }
@@ -82,6 +95,7 @@ impl<T: Enum> Ord for EnumSet<T>
 where
     T::Rep: Ord,
 {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn cmp(&self, other: &Self) -> Ordering {
         self.raw.cmp(&other.raw)
     }
@@ -91,6 +105,7 @@ impl<T: Enum> Hash for EnumSet<T>
 where
     T::Rep: Hash,
 {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.raw.hash(state);
     }
@@ -102,6 +117,7 @@ where
 {
     type Output = Self;
 
+    #[inline]
     fn not(self) -> Self::Output {
         Self { raw: !self.raw }
     }
@@ -114,6 +130,8 @@ macro_rules! bitop {
             T::Rep: $t<Output = T::Rep>,
         {
             type Output = Self;
+
+            #[cfg_attr(feature = "inline-more", inline)]
             fn $f(self, other: Self) -> Self::Output {
                 Self {
                     raw: self.raw.$f(other.raw),
@@ -125,6 +143,8 @@ macro_rules! bitop {
             T::Rep: $t<Output = T::Rep>,
         {
             type Output = Self;
+
+            #[cfg_attr(feature = "inline-more", inline)]
             fn $f(self, other: T) -> Self::Output {
                 Self {
                     raw: self.raw.$f(other.bit()),
@@ -139,6 +159,7 @@ macro_rules! bitassign {
         where
             T::Rep: $t,
         {
+            #[cfg_attr(feature = "inline-more", inline)]
             fn $f(&mut self, other: Self) {
                 self.raw.$f(other.raw)
             }
@@ -147,6 +168,7 @@ macro_rules! bitassign {
         where
             T::Rep: $t,
         {
+            #[cfg_attr(feature = "inline-more", inline)]
             fn $f(&mut self, other: T) {
                 self.raw.$f(other.bit())
             }
@@ -164,6 +186,7 @@ impl<T: Enum> FromIterator<T> for EnumSet<T>
 where
     T::Rep: BitOr<Output = T::Rep> + Wordlike,
 {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         Self {
             raw: iter
@@ -178,6 +201,7 @@ impl<'a, T: Enum> FromIterator<&'a T> for EnumSet<T>
 where
     T::Rep: BitOr<Output = T::Rep> + Wordlike,
 {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn from_iter<I: IntoIterator<Item = &'a T>>(iter: I) -> Self {
         Self {
             raw: iter
@@ -192,6 +216,7 @@ impl<T: Enum> Default for EnumSet<T>
 where
     T::Rep: Wordlike,
 {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn default() -> Self {
         Self::new()
     }
@@ -201,6 +226,7 @@ where
 pub mod __private {
     use super::*;
 
+    #[inline]
     pub const fn construct_set<T: Enum>(raw: T::Rep, _type_holder: T) -> EnumSet<T> {
         EnumSet { raw }
     }
@@ -230,6 +256,7 @@ where
     type Item = T;
     type IntoIter = EnumIter<T>;
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn into_iter(self) -> Self::IntoIter {
         EnumIter {
             set: self,
@@ -259,16 +286,19 @@ where
 {
     type Item = T;
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn next(&mut self) -> Option<Self::Item> {
         let set = self.set;
         self.iter.find(move |&x| set.contains(x))
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let count = Wordlike::count_ones(self.set.raw) as usize;
         (0, Some(min(self.iter.len(), count)))
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn count(self) -> usize {
         let set = self.set;
         self.iter.map(move |x| set.contains(x) as usize).sum()

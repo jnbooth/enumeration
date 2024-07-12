@@ -39,6 +39,7 @@ pub trait Enum: Copy + Ord {
     fn index(self) -> usize;
 
     /// Inverse of `index`. Returns `None` if out of range.
+    #[cfg_attr(feature = "inline-more", inline)]
     fn from_index(i: usize) -> Option<Self> {
         Self::enumerate(..).find(|e| e.index() == i)
     }
@@ -83,6 +84,8 @@ impl Enum for bool {
     const SIZE: usize = 2;
     const MIN: Self = false;
     const MAX: Self = true;
+
+    #[cfg_attr(feature = "inline-more", inline)]
     fn succ(self) -> Option<Self> {
         if self {
             None
@@ -90,6 +93,8 @@ impl Enum for bool {
             Some(true)
         }
     }
+
+    #[cfg_attr(feature = "inline-more", inline)]
     fn pred(self) -> Option<Self> {
         if self {
             Some(false)
@@ -97,12 +102,18 @@ impl Enum for bool {
             None
         }
     }
+
+    #[cfg_attr(feature = "inline-more", inline)]
     fn bit(self) -> Self::Rep {
         1 << (self as u8)
     }
+
+    #[cfg_attr(feature = "inline-more", inline)]
     fn index(self) -> usize {
         self as usize
     }
+
+    #[cfg_attr(feature = "inline-more", inline)]
     fn from_index(i: usize) -> Option<Self> {
         match i {
             0 => Some(false),
@@ -124,6 +135,7 @@ where
 
     const MAX: Self = Some(T::MAX);
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn succ(self) -> Option<Self> {
         match self {
             None => Some(Some(T::MIN)),
@@ -131,10 +143,15 @@ where
         }
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn pred(self) -> Option<Self> {
-        self.map(T::pred)
+        match self {
+            None => None,
+            Some(e) => Some(e.pred()),
+        }
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn bit(self) -> Self::Rep {
         match self {
             None => T::MIN.bit(),
@@ -143,6 +160,7 @@ where
         .into()
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn index(self) -> usize {
         match self {
             None => 0,
@@ -150,6 +168,7 @@ where
         }
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn from_index(i: usize) -> Option<Self> {
         if i == 0 {
             Some(None)
@@ -169,6 +188,7 @@ pub struct Enumeration<T> {
 impl<T: Enum> Iterator for Enumeration<T> {
     type Item = T;
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn next(&mut self) -> Option<Self::Item> {
         if self.finished {
             None
@@ -184,6 +204,7 @@ impl<T: Enum> Iterator for Enumeration<T> {
         }
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn count(self) -> usize {
         if self.finished {
             0
@@ -192,12 +213,14 @@ impl<T: Enum> Iterator for Enumeration<T> {
         }
     }
 
+    #[cfg_attr(feature = "inline-more", inline)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let exact = self.count();
         (exact, Some(exact))
     }
 }
 impl<T: Enum> DoubleEndedIterator for Enumeration<T> {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.finished {
             None
@@ -215,6 +238,7 @@ impl<T: Enum> DoubleEndedIterator for Enumeration<T> {
 }
 impl<T: Enum> FusedIterator for Enumeration<T> {}
 impl<T: Enum> ExactSizeIterator for Enumeration<T> {
+    #[inline]
     fn len(&self) -> usize {
         self.count()
     }

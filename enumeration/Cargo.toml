@@ -13,3 +13,11 @@ serde = { version = "1.0.137", optional = true }
 [dev-dependencies]
 enumeration_derive = { path = "../enumeration_derive" }
 serde_json = "1"
+
+[features]
+default = ["inline-more"]
+
+# Enables usage of `#[inline]` on far more functions than by default in this
+# crate. This may lead to a performance increase but often comes at a compile
+# time cost.
+inline-more = []
