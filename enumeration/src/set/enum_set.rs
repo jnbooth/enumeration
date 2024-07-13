@@ -1,10 +1,11 @@
 use std::cmp::Ordering;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{Hash, Hasher};
-use std::iter::{ExactSizeIterator, FromIterator, FusedIterator, Iterator};
+use std::iter::{FromIterator, Iterator};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
 
-use crate::enum_trait::{Enum, Enumeration};
+use super::iter::Iter;
+use crate::enum_trait::Enum;
 use crate::wordlike::Wordlike;
 
 #[repr(transparent)]
@@ -22,13 +23,91 @@ where
     }
 
     #[inline]
+    pub const fn capacity(&self) -> usize {
+        T::SIZE
+    }
+
+    #[inline]
     pub fn len(&self) -> usize {
         T::Rep::count_ones(self.raw) as usize
     }
 
     #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.raw == Wordlike::ZERO
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
+    pub fn retain<F>(&mut self, mut f: F)
+    where
+        F: FnMut(T) -> bool,
+    {
+        for val in T::enumerate(..) {
+            let bit = val.bit();
+            if ((self.raw & bit) != Wordlike::ZERO) && !f(val) {
+                self.raw &= !bit;
+            }
+        }
+    }
+
+    #[inline]
     pub fn clear(&mut self) {
         self.raw = Wordlike::ZERO;
+    }
+
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        Self {
+            raw: !self.raw & T::Rep::mask(T::SIZE as u32),
+        }
+    }
+
+    #[inline]
+    pub fn difference(&self, other: &Self) -> Self {
+        Self {
+            raw: (self.raw | other.raw) ^ other.raw,
+        }
+    }
+
+    #[inline]
+    pub fn symmetric_difference(&self, other: &Self) -> Self {
+        Self {
+            raw: self.raw ^ other.raw,
+        }
+    }
+
+    #[inline]
+    pub fn intersection(&self, other: &Self) -> Self {
+        Self {
+            raw: (self.raw & other.raw),
+        }
+    }
+
+    #[inline]
+    pub fn union(&self, other: &Self) -> Self {
+        Self {
+            raw: self.raw | other.raw,
+        }
+    }
+
+    #[inline]
+    pub fn contains(&self, x: T) -> bool {
+        self.raw & x.bit() != Wordlike::ZERO
+    }
+
+    #[inline]
+    pub fn is_disjoint(&self, other: &Self) -> bool {
+        self.raw & other.raw == Wordlike::ZERO
+    }
+
+    #[inline]
+    pub fn is_subset(&self, other: &Self) -> bool {
+        self.raw | other.raw == other.raw
+    }
+
+    #[inline]
+    pub fn is_superset(&self, other: &Self) -> bool {
+        self.raw | other.raw == self.raw
     }
 
     #[inline]
@@ -39,18 +118,6 @@ where
     #[inline]
     pub fn remove(&mut self, x: T) {
         self.raw &= !x.bit()
-    }
-
-    #[inline]
-    pub fn contains(&self, x: T) -> bool {
-        self.raw & x.bit() != Wordlike::ZERO
-    }
-
-    #[inline]
-    pub fn inverse(&self) -> Self {
-        Self {
-            raw: !self.raw & T::Rep::mask(T::SIZE as u32),
-        }
     }
 
     #[inline]
@@ -226,15 +293,11 @@ macro_rules! enums {
 
 impl<T: Enum> IntoIterator for EnumSet<T> {
     type Item = T;
-    type IntoIter = EnumIter<T>;
+    type IntoIter = Iter<T>;
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn into_iter(self) -> Self::IntoIter {
-        EnumIter {
-            set: self,
-            iter: T::enumerate(..),
-            remaining: self.len(),
-        }
+        Iter::new(self)
     }
 }
 
@@ -246,95 +309,6 @@ where
         f.debug_list().entries(self.into_iter()).finish()
     }
 }
-
-fn enum_fold<T: Enum, B, F>(set: EnumSet<T>, mut fold: F) -> impl FnMut(B, T) -> B
-where
-    F: FnMut(B, T) -> B,
-{
-    move |acc, item| {
-        if set.contains(item) {
-            fold(acc, item)
-        } else {
-            acc
-        }
-    }
-}
-
-pub struct EnumIter<T: Enum> {
-    set: EnumSet<T>,
-    iter: Enumeration<T>,
-    remaining: usize,
-}
-
-impl<T: Enum> Clone for EnumIter<T> {
-    fn clone(&self) -> Self {
-        Self {
-            set: self.set.clone(),
-            iter: self.iter.clone(),
-            remaining: self.remaining,
-        }
-    }
-}
-
-impl<T: Enum> Iterator for EnumIter<T> {
-    type Item = T;
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn next(&mut self) -> Option<Self::Item> {
-        let set = self.set;
-        let next = self.iter.find(move |&x| set.contains(x));
-        if next.is_some() {
-            self.remaining -= 1;
-        }
-        next
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.remaining, Some(self.remaining))
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn count(self) -> usize {
-        self.remaining
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn fold<B, F>(self, init: B, fold: F) -> B
-    where
-        F: FnMut(B, Self::Item) -> B,
-    {
-        self.iter.fold(init, enum_fold(self.set, fold))
-    }
-}
-
-impl<T: Enum> ExactSizeIterator for EnumIter<T> {
-    #[inline]
-    fn len(&self) -> usize {
-        self.remaining
-    }
-}
-
-impl<T: Enum> DoubleEndedIterator for EnumIter<T> {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        let set = self.set;
-        let next = self.iter.rfind(move |&x| set.contains(x));
-        if next.is_some() {
-            self.remaining -= 1;
-        }
-        next
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn rfold<B, F>(self, init: B, fold: F) -> B
-    where
-        F: FnMut(B, Self::Item) -> B,
-    {
-        self.iter.rfold(init, enum_fold(self.set, fold))
-    }
-}
-
-impl<T: Enum> FusedIterator for EnumIter<T> {}
 
 #[cfg(test)]
 mod tests {

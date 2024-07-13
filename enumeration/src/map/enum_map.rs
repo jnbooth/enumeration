@@ -1,9 +1,12 @@
 use std::hash::Hash;
-use std::iter::{FusedIterator, Iterator, Zip};
+use std::iter::Iterator;
 use std::marker::PhantomData;
+use std::ops::{Index, IndexMut};
 use std::{slice, vec};
 
-use crate::enum_trait::{Enum, Enumeration};
+use super::entry::{Entry, OccupiedEntry, VacantEntry};
+use super::iter::Iter;
+use crate::enum_trait::Enum;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EnumMap<K, V> {
@@ -33,11 +36,6 @@ impl<K: Enum, V> EnumMap<K, V> {
     #[inline]
     pub const fn capacity(&self) -> usize {
         K::SIZE
-    }
-
-    #[inline]
-    pub fn size(&self) -> usize {
-        self.size
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
@@ -92,146 +90,136 @@ impl<K: Enum, V> EnumMap<K, V> {
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
+    pub fn values_mut(&mut self) -> impl Iterator<Item = &mut V> {
+        self.inner.iter_mut().filter_map(Option::as_mut)
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
     pub fn into_values(self) -> impl Iterator<Item = V> {
         self.inner.into_iter().filter_map(std::convert::identity)
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
-    pub fn iter(&self) -> MapIter<K, &V, slice::Iter<Option<V>>> {
+    pub fn iter(&self) -> Iter<K, &V, slice::Iter<Option<V>>> {
         self.into_iter()
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
-    pub fn iter_copied(&self) -> MapIter<K, V, slice::Iter<Option<V>>>
+    pub fn iter_mut(&mut self) -> Iter<K, &mut V, slice::IterMut<Option<V>>> {
+        self.into_iter()
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
+    pub fn iter_copied(&self) -> Iter<K, V, slice::Iter<Option<V>>>
     where
         V: Copy,
     {
-        MapIter::new(&self.inner, self.size, |v| *v)
+        Iter::new(&self.inner, self.size, |v| *v)
     }
-}
 
-fn map_fold<B, K, From, To>(
-    mut f: impl FnMut(From) -> Option<To>,
-    mut fold: impl FnMut(B, (K, To)) -> B,
-) -> impl FnMut(B, (K, From)) -> B {
-    move |acc, (k, item)| match f(item) {
-        Some(x) => fold(acc, (k, x)),
-        None => acc,
-    }
-}
-
-#[must_use = "iterators are lazy and do nothing unless consumed"]
-pub struct MapIter<K, V, I: Iterator> {
-    inner: Zip<Enumeration<K>, I>,
-    f: fn(I::Item) -> Option<V>,
-    remaining: usize,
-}
-
-impl<K: Enum, V, I: Iterator> MapIter<K, V, I> {
     #[inline]
-    fn new<It>(iter: It, size: usize, f: fn(I::Item) -> Option<V>) -> Self
-    where
-        It: IntoIterator<IntoIter = I>,
-    {
-        Self {
-            inner: K::enumerate(..).zip(iter.into_iter()),
-            f,
-            remaining: size,
-        }
+    pub fn len(&self) -> usize {
+        self.size
     }
-}
 
-impl<K: Enum, V, I: Iterator> Iterator for MapIter<K, V, I> {
-    type Item = (K, V);
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.size == 0
+    }
 
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some((k, v)) = self.inner.next() {
-            if let Some(item) = (self.f)(v) {
-                self.remaining -= 1;
-                return Some((k, item));
+    pub fn retain<F>(&mut self, mut f: F)
+    where
+        F: FnMut(K, &mut V) -> bool,
+    {
+        for (k, m_v) in K::enumerate(..).zip(&mut self.inner) {
+            let erase = match m_v {
+                Some(v) => !f(k, v),
+                None => false,
+            };
+            if erase {
+                self.size -= 1;
+                m_v.take();
             }
         }
-        None
     }
 
-    #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.remaining, Some(self.remaining))
-    }
-
-    #[inline]
-    fn count(self) -> usize {
-        self.remaining
-    }
-
-    #[inline]
-    fn fold<B, F>(self, init: B, fold: F) -> B
-    where
-        F: FnMut(B, Self::Item) -> B,
-    {
-        self.inner.fold(init, map_fold(self.f, fold))
-    }
-}
-
-impl<K: Enum, V, I: Iterator> ExactSizeIterator for MapIter<K, V, I> {
-    #[inline]
-    fn len(&self) -> usize {
-        self.remaining
-    }
-}
-
-impl<K: Enum, V, I: DoubleEndedIterator + ExactSizeIterator> DoubleEndedIterator
-    for MapIter<K, V, I>
-{
     #[cfg_attr(feature = "inline-more", inline)]
-    fn next_back(&mut self) -> Option<Self::Item> {
-        while let Some((k, v)) = self.inner.next_back() {
-            if let Some(item) = (self.f)(v) {
-                self.remaining -= 1;
-                return Some((k, item));
-            }
+    pub fn clear(&mut self) {
+        self.size = 0;
+        self.inner.fill_with(Default::default);
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
+    pub fn entry(&mut self, key: K) -> Entry<K, V> {
+        let entry = &mut self.inner[key.index()];
+        if entry.is_some() {
+            Entry::Occupied(OccupiedEntry {
+                key,
+                value: entry,
+                size: &mut self.size,
+            })
+        } else {
+            Entry::Vacant(VacantEntry {
+                key,
+                value: entry,
+                size: &mut self.size,
+            })
         }
-        None
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn rfold<B, F>(self, init: B, fold: F) -> B
-    where
-        F: FnMut(B, Self::Item) -> B,
-    {
-        self.inner.rfold(init, map_fold(self.f, fold))
     }
 }
 
-impl<K: Enum, V, I: FusedIterator> FusedIterator for MapIter<K, V, I> {}
+impl<K: Enum, V> Index<K> for EnumMap<K, V> {
+    type Output = V;
+
+    /// Returns a reference to the value corresponding to the supplied key.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the key is not present in the `HashMap`.
+    #[inline]
+    fn index(&self, key: K) -> &Self::Output {
+        self.get(key).expect("no entry found for key")
+    }
+}
+
+impl<K: Enum, V> IndexMut<K> for EnumMap<K, V> {
+    /// Returns a mutable reference to the value corresponding to the supplied key.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the key is not present in the `HashMap`.
+    #[inline]
+    fn index_mut(&mut self, key: K) -> &mut Self::Output {
+        self.get_mut(key).expect("no entry found for key")
+    }
+}
 
 impl<K: Enum, V> IntoIterator for EnumMap<K, V> {
     type Item = (K, V);
-    type IntoIter = MapIter<K, V, vec::IntoIter<Option<V>>>;
+    type IntoIter = Iter<K, V, vec::IntoIter<Option<V>>>;
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn into_iter(self) -> Self::IntoIter {
-        MapIter::new(self.inner, self.size, std::convert::identity)
+        Iter::new(self.inner, self.size, std::convert::identity)
     }
 }
 
 impl<'a, K: Enum, V> IntoIterator for &'a EnumMap<K, V> {
     type Item = (K, &'a V);
-    type IntoIter = MapIter<K, &'a V, slice::Iter<'a, Option<V>>>;
+    type IntoIter = Iter<K, &'a V, slice::Iter<'a, Option<V>>>;
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn into_iter(self) -> Self::IntoIter {
-        MapIter::new(&self.inner, self.size, Option::as_ref)
+        Iter::new(&self.inner, self.size, Option::as_ref)
     }
 }
 
 impl<'a, K: Enum, V> IntoIterator for &'a mut EnumMap<K, V> {
     type Item = (K, &'a mut V);
-    type IntoIter = MapIter<K, &'a mut V, slice::IterMut<'a, Option<V>>>;
+    type IntoIter = Iter<K, &'a mut V, slice::IterMut<'a, Option<V>>>;
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn into_iter(self) -> Self::IntoIter {
-        MapIter::new(&mut self.inner, self.size, Option::as_mut)
+        Iter::new(&mut self.inner, self.size, Option::as_mut)
     }
 }
