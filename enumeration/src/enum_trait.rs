@@ -202,6 +202,28 @@ impl<T: Enum> Iterator for Enumeration<T> {
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
+    fn fold<B, F>(self, init: B, mut fold: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        if self.finished {
+            return init;
+        }
+        let mut accum = init;
+        let mut val = self.start;
+        loop {
+            accum = fold(accum, val);
+            if val == self.end {
+                return accum;
+            }
+            val = match val.succ() {
+                None => return accum,
+                Some(val) => val,
+            }
+        }
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
     fn count(self) -> usize {
         if self.finished {
             0
@@ -230,6 +252,28 @@ impl<T: Enum> DoubleEndedIterator for Enumeration<T> {
                 .pred()
                 .expect("got None from calling Enum::pred() where > Enum::MIN");
             Some(at)
+        }
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
+    fn rfold<B, F>(self, init: B, mut fold: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        if self.finished {
+            return init;
+        }
+        let mut accum = init;
+        let mut val = self.end;
+        loop {
+            accum = fold(accum, val);
+            if val == self.start {
+                return accum;
+            }
+            val = match val.pred() {
+                None => return accum,
+                Some(val) => val,
+            }
         }
     }
 }

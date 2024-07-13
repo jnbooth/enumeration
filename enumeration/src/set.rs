@@ -1,4 +1,4 @@
-use std::cmp::{min, Ordering};
+use std::cmp::Ordering;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{Hash, Hasher};
 use std::iter::{ExactSizeIterator, FromIterator, FusedIterator, Iterator};
@@ -18,9 +18,12 @@ where
 {
     #[inline]
     pub const fn new() -> Self {
-        Self {
-            raw: Wordlike::ZERO,
-        }
+        Self { raw: T::Rep::ZERO }
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        T::Rep::count_ones(self.raw) as usize
     }
 
     #[inline]
@@ -230,6 +233,7 @@ impl<T: Enum> IntoIterator for EnumSet<T> {
         EnumIter {
             set: self,
             iter: T::enumerate(..),
+            remaining: self.len(),
         }
     }
 }
@@ -243,9 +247,23 @@ where
     }
 }
 
+fn enum_fold<T: Enum, B, F>(set: EnumSet<T>, mut fold: F) -> impl FnMut(B, T) -> B
+where
+    F: FnMut(B, T) -> B,
+{
+    move |acc, item| {
+        if set.contains(item) {
+            fold(acc, item)
+        } else {
+            acc
+        }
+    }
+}
+
 pub struct EnumIter<T: Enum> {
     set: EnumSet<T>,
     iter: Enumeration<T>,
+    remaining: usize,
 }
 
 impl<T: Enum> Clone for EnumIter<T> {
@@ -253,6 +271,7 @@ impl<T: Enum> Clone for EnumIter<T> {
         Self {
             set: self.set.clone(),
             iter: self.iter.clone(),
+            remaining: self.remaining,
         }
     }
 }
@@ -263,34 +282,55 @@ impl<T: Enum> Iterator for EnumIter<T> {
     #[cfg_attr(feature = "inline-more", inline)]
     fn next(&mut self) -> Option<Self::Item> {
         let set = self.set;
-        self.iter.find(move |&x| set.contains(x))
+        let next = self.iter.find(move |&x| set.contains(x));
+        if next.is_some() {
+            self.remaining -= 1;
+        }
+        next
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let count = Wordlike::count_ones(self.set.raw) as usize;
-        (0, Some(min(self.iter.len(), count)))
+        (self.remaining, Some(self.remaining))
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn count(self) -> usize {
-        let set = self.set;
-        self.iter.map(move |x| set.contains(x) as usize).sum()
+        self.remaining
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
-    fn fold<Acc, Fold>(self, init: Acc, mut fold: Fold) -> Acc
+    fn fold<B, F>(self, init: B, fold: F) -> B
     where
-        Fold: FnMut(Acc, Self::Item) -> Acc,
+        F: FnMut(B, Self::Item) -> B,
     {
+        self.iter.fold(init, enum_fold(self.set, fold))
+    }
+}
+
+impl<T: Enum> ExactSizeIterator for EnumIter<T> {
+    #[inline]
+    fn len(&self) -> usize {
+        self.remaining
+    }
+}
+
+impl<T: Enum> DoubleEndedIterator for EnumIter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
         let set = self.set;
-        self.iter.fold(init, move |acc, item| {
-            if set.contains(item) {
-                fold(acc, item)
-            } else {
-                acc
-            }
-        })
+        let next = self.iter.rfind(move |&x| set.contains(x));
+        if next.is_some() {
+            self.remaining -= 1;
+        }
+        next
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
+    fn rfold<B, F>(self, init: B, fold: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        self.iter.rfold(init, enum_fold(self.set, fold))
     }
 }
 
