@@ -1,5 +1,6 @@
 #[cfg(test)]
 #[macro_use]
+#[cfg(feature = "derive")]
 extern crate enumeration_derive;
 
 #[macro_use]

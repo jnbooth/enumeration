@@ -1,6 +1,6 @@
 [package]
 name = "enumeration"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 authors = ["Joshua Booth <joshua.n.booth@gmail.com>"]
 publish = false
@@ -8,15 +8,16 @@ description = "Enumerable enums with bitwise representation"
 repository = "https://github.com/jnbooth/enumeration"
 
 [dependencies]
+enumeration_derive = { path = "../enumeration_derive", optional = true }
 serde = { version = "1.0.137", optional = true }
 
 [dev-dependencies]
-enumeration_derive = { path = "../enumeration_derive" }
 serde_json = "1"
 
 [features]
-default = ["inline-more"]
+default = ["derive", "inline-more"]
 
+derive = ["enumeration_derive"]
 # Enables usage of `#[inline]` on far more functions than by default in this
 # crate. This may lead to a performance increase but often comes at a compile
 # time cost.
