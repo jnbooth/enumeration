@@ -363,7 +363,7 @@ impl<K: Enum, V> EnumMap<K, V> {
     /// assert_eq!(a.len(), 1);
     /// ```
     #[inline]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.size
     }
 
@@ -380,7 +380,7 @@ impl<K: Enum, V> EnumMap<K, V> {
     /// a.insert(Ordering::Less, "a");
     /// assert!(!a.is_empty());
     #[inline]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.size == 0
     }
 
@@ -583,10 +583,7 @@ impl<K: Enum, V> EnumMap<K, V> {
     /// ```
     #[inline]
     pub fn get(&self, k: K) -> Option<&V> {
-        if self.inner.is_empty() {
-            return None;
-        }
-        self.inner[k.index()].as_ref()
+        self.inner.get(k.index()).and_then(Option::as_ref)
     }
 
     /// Returns `true` if the map contains a value for the specified key.
@@ -607,10 +604,7 @@ impl<K: Enum, V> EnumMap<K, V> {
     /// assert_eq!(map.contains_key(Ordering::Equal), false);
     #[cfg_attr(feature = "inline-more", inline)]
     pub fn contains_key(&self, k: K) -> bool {
-        if self.inner.is_empty() {
-            return false;
-        }
-        self.inner[k.index()].is_some()
+        matches!(self.inner.get(k.index()), Some(Some(_)))
     }
 
     /// Returns a mutable reference to the value corresponding to the key.
@@ -634,10 +628,7 @@ impl<K: Enum, V> EnumMap<K, V> {
     /// ```
     #[inline]
     pub fn get_mut(&mut self, k: K) -> Option<&mut V> {
-        if self.inner.is_empty() {
-            return None;
-        }
-        self.inner[k.index()].as_mut()
+        self.inner.get_mut(k.index()).and_then(Option::as_mut)
     }
 
     /// Inserts a key-value pair into the map.
@@ -687,10 +678,7 @@ impl<K: Enum, V> EnumMap<K, V> {
     /// ```
     #[cfg_attr(feature = "inline-more", inline)]
     pub fn remove(&mut self, k: K) -> Option<V> {
-        if self.inner.is_empty() {
-            return None;
-        }
-        let old_val = self.inner[k.index()].take();
+        let old_val = self.inner.get_mut(k.index())?.take();
         if old_val.is_some() {
             self.size -= 1;
         }

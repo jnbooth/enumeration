@@ -31,7 +31,7 @@ impl<'a, K: Enum, V> Entry<'a, K, V> {
     /// *map.entry(Ordering::Less).or_insert(10) *= 2;
     /// assert_eq!(map[Ordering::Less], 6);
     /// ```
-    #[inline]
+    #[cfg_attr(feature = "inline-more", inline)]
     pub fn or_insert(self, default: V) -> &'a mut V {
         match self {
             Self::Occupied(entry) => entry.into_mut(),
@@ -54,7 +54,7 @@ impl<'a, K: Enum, V> Entry<'a, K, V> {
     ///
     /// assert_eq!(map[Ordering::Less], "hoho");
     /// ```
-    #[inline]
+    #[cfg_attr(feature = "inline-more", inline)]
     pub fn or_insert_with<F: FnOnce() -> V>(self, default: F) -> &'a mut V {
         match self {
             Self::Occupied(entry) => entry.into_mut(),
@@ -78,7 +78,7 @@ impl<'a, K: Enum, V> Entry<'a, K, V> {
     ///
     /// assert_eq!(map[Ordering::Less], -1);
     /// ```
-    #[inline]
+    #[cfg_attr(feature = "inline-more", inline)]
     pub fn or_insert_with_key<F: FnOnce(K) -> V>(self, default: F) -> &'a mut V {
         match self {
             Self::Occupied(entry) => entry.into_mut(),
@@ -100,7 +100,7 @@ impl<'a, K: Enum, V> Entry<'a, K, V> {
     /// let mut map: EnumMap<Ordering, u32> = EnumMap::new();
     /// assert_eq!(map.entry(Ordering::Less).key(), Ordering::Less);
     /// ```
-    #[inline]
+    #[cfg_attr(feature = "inline-more", inline)]
     pub fn key(&self) -> K {
         match *self {
             Self::Occupied(ref entry) => entry.key(),
@@ -129,7 +129,7 @@ impl<'a, K: Enum, V> Entry<'a, K, V> {
     ///    .or_insert(42);
     /// assert_eq!(map[Ordering::Less], 43);
     /// ```
-    #[inline]
+    #[cfg_attr(feature = "inline-more", inline)]
     pub fn and_modify<F>(self, f: F) -> Self
     where
         F: FnOnce(&mut V),
@@ -295,7 +295,7 @@ impl<'a, K: Enum, V> OccupiedEntry<'a, K, V> {
     ///
     /// assert_eq!(map[Ordering::Less], 15);
     /// ```
-    #[inline]
+    #[cfg_attr(feature = "inline-more", inline)]
     pub fn insert(&mut self, value: V) -> V {
         self.value.replace(value).unwrap()
     }

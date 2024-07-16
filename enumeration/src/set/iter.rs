@@ -83,6 +83,7 @@ impl<T: Enum> ExactSizeIterator for Iter<T> {
 }
 
 impl<T: Enum> DoubleEndedIterator for Iter<T> {
+    #[cfg_attr(feature = "inline-more", inline)]
     fn next_back(&mut self) -> Option<Self::Item> {
         let set = self.set;
         let next = self.iter.rfind(move |&x| set.contains(x));

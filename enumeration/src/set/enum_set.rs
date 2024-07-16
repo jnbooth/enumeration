@@ -435,14 +435,14 @@ impl<T: Enum> PartialEq for EnumSet<T> {
 impl<T: Enum> Eq for EnumSet<T> {}
 
 impl<T: Enum> PartialOrd for EnumSet<T> {
-    #[cfg_attr(feature = "inline-more", inline)]
+    #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.raw.partial_cmp(&other.raw)
     }
 }
 
 impl<T: Enum> Ord for EnumSet<T> {
-    #[cfg_attr(feature = "inline-more", inline)]
+    #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         self.raw.cmp(&other.raw)
     }
@@ -488,7 +488,7 @@ macro_rules! bitop {
         impl<T: Enum> $t for EnumSet<T> {
             type Output = Self;
 
-            #[cfg_attr(feature = "inline-more", inline)]
+            #[inline]
             fn $f(self, other: Self) -> Self::Output {
                 Self {
                     raw: self.raw.$f(other.raw),
@@ -498,7 +498,7 @@ macro_rules! bitop {
         impl<T: Enum> $t<T> for EnumSet<T> {
             type Output = Self;
 
-            #[cfg_attr(feature = "inline-more", inline)]
+            #[inline]
             fn $f(self, other: T) -> Self::Output {
                 Self {
                     raw: self.raw.$f(other.bit()),
@@ -510,13 +510,13 @@ macro_rules! bitop {
 macro_rules! bitassign {
     ($t:tt, $f:ident) => {
         impl<T: Enum> $t for EnumSet<T> {
-            #[cfg_attr(feature = "inline-more", inline)]
+            #[inline]
             fn $f(&mut self, other: Self) {
                 self.raw.$f(other.raw)
             }
         }
         impl<T: Enum> $t<T> for EnumSet<T> {
-            #[cfg_attr(feature = "inline-more", inline)]
+            #[inline]
             fn $f(&mut self, other: T) {
                 self.raw.$f(other.bit())
             }
@@ -565,14 +565,14 @@ impl<T: Enum> IntoIterator for EnumSet<T> {
     type Item = T;
     type IntoIter = Iter<T>;
 
-    #[cfg_attr(feature = "inline-more", inline)]
+    #[inline]
     fn into_iter(self) -> Self::IntoIter {
         Iter::new(self)
     }
 }
 
 impl<T: Enum> Extend<T> for EnumSet<T> {
-    #[inline]
+    #[cfg_attr(feature = "inline-more", inline)]
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         for item in iter {
             self.insert(item);
@@ -581,7 +581,7 @@ impl<T: Enum> Extend<T> for EnumSet<T> {
 }
 
 impl<'a, T: Enum> Extend<&'a T> for EnumSet<T> {
-    #[inline]
+    #[cfg_attr(feature = "inline-more", inline)]
     fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
         for &item in iter {
             self.insert(item);
