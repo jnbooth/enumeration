@@ -25,7 +25,7 @@ where
     /// use enumeration::{Enum, EnumSet};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let set: EnumSet<TextStyle> = EnumSet::new();
     /// ```
@@ -43,10 +43,10 @@ where
     /// use enumeration::{Enum, EnumSet};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let set: EnumSet<TextStyle> = EnumSet::new();
-    /// assert!(set.capacity() == 7);
+    /// assert!(set.capacity() == 6);
     /// ```
     #[inline]
     pub const fn capacity(&self) -> usize {
@@ -61,7 +61,7 @@ where
     /// use enumeration::{Enum, EnumSet};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let mut v: EnumSet<TextStyle> = EnumSet::new();
     /// assert_eq!(v.len(), 0);
@@ -81,7 +81,7 @@ where
     /// use enumeration::{Enum, EnumSet};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let mut v: EnumSet<TextStyle> = EnumSet::new();
     /// assert!(v.is_empty());
@@ -103,7 +103,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let mut set = enums![TextStyle::Blink, TextStyle::Bold, TextStyle::Highlight];
     /// set.retain(|k| k == TextStyle::Blink || k == TextStyle::Highlight);
@@ -130,7 +130,7 @@ where
     /// use enumeration::{Enum, EnumSet};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let set: EnumSet<TextStyle> = EnumSet::new();
     ///
@@ -174,7 +174,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let a = enums![TextStyle::Blink, TextStyle::Bold, TextStyle::Italic];
     /// let b = enums![TextStyle::Bold, TextStyle::Italic, TextStyle::Underline];
@@ -199,7 +199,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let a = enums![TextStyle::Blink, TextStyle::Bold, TextStyle::Italic];
     /// let b = enums![TextStyle::Bold, TextStyle::Italic, TextStyle::Underline];
@@ -223,7 +223,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let a = enums![TextStyle::Blink, TextStyle::Bold, TextStyle::Italic];
     /// let b = enums![TextStyle::Bold, TextStyle::Italic, TextStyle::Underline];
@@ -246,7 +246,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let a = enums![TextStyle::Blink, TextStyle::Bold];
     /// let b = enums![TextStyle::Bold, TextStyle::Italic];
@@ -268,7 +268,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let set = enums![TextStyle::Blink, TextStyle::Bold, TextStyle::Italic];
     /// assert_eq!(set.contains(TextStyle::Bold), true);
@@ -288,7 +288,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let a = enums![TextStyle::Blink, TextStyle::Bold, TextStyle::Italic];
     /// let mut b = EnumSet::new();
@@ -313,7 +313,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let sup = enums![TextStyle::Blink, TextStyle::Bold, TextStyle::Italic];
     /// let mut set = EnumSet::new();
@@ -338,7 +338,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let sub = enums![TextStyle::Blink, TextStyle::Bold];
     /// let mut set = EnumSet::new();
@@ -365,7 +365,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let mut set = enums![TextStyle::Blink];
     /// set.insert(TextStyle::Bold);
@@ -385,7 +385,7 @@ where
     /// use enumeration::{Enum, EnumSet, enums};
     ///
     /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    /// pub enum TextStyle { Blink, Bold, Highlight, Inverse, Italic, Strikeout, Underline }
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let mut set = EnumSet::new();
     ///
