@@ -109,7 +109,6 @@ where
     /// set.retain(|k| k == TextStyle::Blink || k == TextStyle::Highlight);
     /// assert_eq!(set, enums![TextStyle::Blink, TextStyle::Highlight]);
     /// ```
-
     #[cfg_attr(feature = "inline-more", inline)]
     pub fn retain<F>(&mut self, mut f: F)
     where
