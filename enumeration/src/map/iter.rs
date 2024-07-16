@@ -1,4 +1,5 @@
 use std::iter::{FusedIterator, Iterator, Zip};
+use std::slice;
 
 use crate::enum_trait::{Enum, Enumeration};
 
@@ -94,4 +95,122 @@ impl<K: Enum, V, I: DoubleEndedIterator + ExactSizeIterator> DoubleEndedIterator
     }
 }
 
+#[inline]
+fn matches_mut<K: Copy, V, P>(key: K, val: &mut Option<V>, pred: &mut P) -> bool
+where
+    P: FnMut(K, &mut V) -> bool,
+{
+    let val = match val.as_mut() {
+        Some(val) => val,
+        None => return false,
+    };
+    pred(key, val)
+}
+
+fn drain_fold<'a, B, K: Copy, V: 'a>(
+    mut pred: impl FnMut(K, &mut V) -> bool,
+    mut fold: impl FnMut(B, (K, V)) -> B,
+    size: &'a mut usize,
+) -> impl FnMut(B, (K, &'a mut Option<V>)) -> B {
+    move |acc, (k, mut item)| {
+        if matches_mut(k, &mut item, &mut pred) {
+            *size -= 1;
+            fold(acc, (k, item.take().unwrap()))
+        } else {
+            acc
+        }
+    }
+}
+
 impl<K: Enum, V, I: FusedIterator> FusedIterator for Iter<K, V, I> {}
+
+#[must_use = "iterators are lazy and do nothing unless consumed"]
+pub struct ExtractIf<'a, K, V, P> {
+    inner: Zip<Enumeration<K>, slice::IterMut<'a, Option<V>>>,
+    pred: P,
+    size: &'a mut usize,
+}
+
+impl<'a, K: Enum, V, P: FnMut(K, &mut V) -> bool> ExtractIf<'a, K, V, P> {
+    #[inline]
+    pub(super) fn new(iter: slice::IterMut<'a, Option<V>>, size: &'a mut usize, pred: P) -> Self {
+        Self {
+            inner: K::enumerate(..).zip(iter),
+            pred,
+            size,
+        }
+    }
+}
+
+impl<'a, K: Enum, V, P: FnMut(K, &mut V) -> bool> Iterator for ExtractIf<'a, K, V, P> {
+    type Item = (K, V);
+
+    #[cfg_attr(feature = "inline-more", inline)]
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some((k, v)) = self.inner.next() {
+            if matches_mut(k, v, &mut self.pred) {
+                *self.size -= 1;
+                return Some((k, v.take().unwrap()));
+            }
+        }
+        None
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(*self.size))
+    }
+
+    #[inline]
+    fn count(mut self) -> usize {
+        let mut count = 0;
+        while let Some((k, v)) = self.inner.next() {
+            if matches_mut(k, v, &mut self.pred) {
+                *v = None;
+                *self.size -= 1;
+                count += 1;
+            }
+        }
+        count
+    }
+
+    #[inline]
+    fn fold<B, F>(self, init: B, fold: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        self.inner
+            .fold(init, drain_fold(self.pred, fold, self.size))
+    }
+}
+
+impl<'a, K: Enum, V, P: FnMut(K, &mut V) -> bool> ExactSizeIterator for ExtractIf<'a, K, V, P> {
+    #[inline]
+    fn len(&self) -> usize {
+        *self.size
+    }
+}
+
+impl<'a, K: Enum, V, P: FnMut(K, &mut V) -> bool> DoubleEndedIterator for ExtractIf<'a, K, V, P> {
+    #[cfg_attr(feature = "inline-more", inline)]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        while let Some((k, v)) = self.inner.next_back() {
+            if matches_mut(k, v, &mut self.pred) {
+                *self.size -= 1;
+                return Some((k, v.take().unwrap()));
+            }
+        }
+        None
+    }
+
+    #[cfg_attr(feature = "inline-more", inline)]
+    fn rfold<B, F>(mut self, init: B, fold: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        self.inner
+            .rfold(init, drain_fold(&mut self.pred, fold, self.size))
+    }
+}
+
+impl<'a, K: Enum, V, P: FnMut(K, &mut V) -> bool> FusedIterator for ExtractIf<'a, K, V, P> {}
