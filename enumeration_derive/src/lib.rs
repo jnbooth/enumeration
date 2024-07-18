@@ -102,6 +102,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
         }
 
         impl #impl_generics #name #ty_generics #where_clause {
+            #[doc(hidden)]
             #inline
             pub const fn bit(self) -> #rep {
                 1 << (self as #idx)
