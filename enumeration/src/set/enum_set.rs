@@ -620,7 +620,7 @@ macro_rules! enums {
 mod tests {
     use super::*;
 
-    #[rustfmt::skip] #[allow(dead_code)]
+    #[rustfmt::skip]
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Enum)]
     pub enum DemoEnum { A, B, C, D, E, F, G, H, I, J }
 

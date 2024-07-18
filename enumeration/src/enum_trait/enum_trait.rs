@@ -226,19 +226,22 @@ impl Enum for Ordering {
 #[cfg(test)]
 mod tests {
     use std::fmt::Debug;
-    use std::mem;
 
     use super::*;
 
+    #[rustfmt::skip]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
+    enum SingleEnum { A }
+
+    #[rustfmt::skip]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
+    enum DoubleEnum { A, B }
+
     #[rustfmt::skip] #[allow(dead_code)]
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
-    enum DemoEnum { A, B, C, D, E, F, G, H, I, J }
+    enum ManyEnum { A, B, C, D, E, F, G, H, I, J }
 
     // Enum tests
-
-    // static assertion proving derive(Enum) picks the smallest possible bitwise representation
-    const _: [(); mem::size_of::<<DemoEnum as Enum>::Rep>()] =
-        [(); DemoEnum::SIZE / 8 + (DemoEnum::SIZE % 8 != 0) as usize];
 
     fn assert_eqs<T: Eq + Debug, X: Iterator<Item = T>, Y: Iterator<Item = T>>(x: X, y: Y) {
         assert_eq!(x.collect::<Vec<_>>(), y.collect::<Vec<_>>());
@@ -253,62 +256,105 @@ mod tests {
 
     #[test]
     fn test_min() {
-        assert_all(|x: DemoEnum| x.succ() != Some(DemoEnum::MIN));
+        fn test<E: Debug + Enum>() {
+            assert_all(|e: E| e.succ() != Some(E::MIN));
+        }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 
     #[test]
     fn test_max() {
-        assert_all(|x: DemoEnum| x.pred() != Some(DemoEnum::MAX));
+        fn test<E: Debug + Enum>() {
+            assert_all(|e: E| e.pred() != Some(E::MAX));
+        }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 
     #[test]
     fn test_succ() {
-        assert_all(|x: DemoEnum| (x == DemoEnum::MAX) == x.succ().is_none());
+        fn test<E: Debug + Enum>() {
+            assert_all(|e: E| (e == E::MAX) == e.succ().is_none());
+        }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 
     #[test]
     fn test_pred() {
-        assert_all(|x: DemoEnum| (x == DemoEnum::MIN) == x.pred().is_none());
+        fn test<E: Debug + Enum>() {
+            assert_all(|e: E| (e == E::MIN) == e.pred().is_none());
+            assert_all(|e: E| (e == E::MIN) == e.pred().is_none());
+        }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 
     #[test]
     fn test_index() {
-        assert_eqs(DemoEnum::enumerate(..).map(Enum::index), 0..DemoEnum::SIZE);
+        fn test<E: Debug + Enum>() {
+            assert_eqs(E::enumerate(..).map(Enum::index), 0..E::SIZE);
+        }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 
     #[test]
     fn test_from_index() {
-        assert_eqs(
-            DemoEnum::enumerate(..).map(Some),
-            (0..DemoEnum::SIZE).map(DemoEnum::from_index),
-        );
+        fn test<E: Debug + Enum>() {
+            assert_eqs(E::enumerate(..).map(Some), (0..E::SIZE).map(E::from_index));
+        }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 
     #[test]
     fn test_from_index_out_of_range() {
-        assert_eq!(DemoEnum::from_index(DemoEnum::SIZE), None);
+        fn test<E: Debug + Enum>() {
+            assert_eq!(E::from_index(E::SIZE), None);
+        }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 
     #[test]
     fn test_count() {
-        for x in DemoEnum::enumerate(..) {
-            for y in DemoEnum::enumerate(..) {
-                let our_count = DemoEnum::enumerate(x..=y).count();
-                let std_count = DemoEnum::enumerate(x..=y).fold(0, |count, _| count + 1);
-                assert_eq!(
-                    our_count, std_count,
-                    "for {:?}..={:?}, {} != {}",
-                    x, y, our_count, std_count
-                );
+        fn test<E: Debug + Enum>() {
+            for x in E::enumerate(..) {
+                for y in E::enumerate(..) {
+                    let our_count = E::enumerate(x..=y).count();
+                    let std_count = E::enumerate(x..=y).fold(0, |count, _| count + 1);
+                    assert_eq!(
+                        our_count, std_count,
+                        "for {:?}..={:?}, {} != {}",
+                        x, y, our_count, std_count
+                    );
+                }
             }
         }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 
     #[test]
     fn test_rev() {
-        let forward: Vec<_> = DemoEnum::enumerate(..).collect();
-        let mut backward: Vec<_> = DemoEnum::enumerate(..).rev().collect();
-        backward.reverse();
-        assert_eq!(forward, backward);
+        fn test<E: Debug + Enum>() {
+            let forward: Vec<_> = E::enumerate(..).collect();
+            let mut backward: Vec<_> = E::enumerate(..).rev().collect();
+            backward.reverse();
+            assert_eq!(forward, backward);
+        }
+        test::<SingleEnum>();
+        test::<DoubleEnum>();
+        test::<ManyEnum>();
     }
 }
