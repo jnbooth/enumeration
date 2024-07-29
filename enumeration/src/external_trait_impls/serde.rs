@@ -1,12 +1,10 @@
 use std::fmt::{self, Formatter};
-use std::iter::FromIterator;
 use std::marker::PhantomData;
-use std::ops::{BitAnd, BitOrAssign};
 
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{Enum, EnumMap, EnumSet, Wordlike};
+use crate::{Enum, EnumMap, EnumSet};
 
 impl<T> Serialize for EnumSet<T>
 where
@@ -67,17 +65,6 @@ where
     #[cfg_attr(feature = "inline-more", inline)]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_map(self)
-    }
-}
-
-impl<K: Enum, V> FromIterator<(K, V)> for EnumMap<K, V> {
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
-        let mut this = EnumMap::new();
-        for (k, v) in iter {
-            this.insert(k, v);
-        }
-        this
     }
 }
 
