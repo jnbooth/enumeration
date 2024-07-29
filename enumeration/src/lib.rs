@@ -1,3 +1,5 @@
+#![allow(clippy::manual_map)]
+
 #[cfg(not(test))]
 #[cfg(feature = "enumeration_derive")]
 extern crate enumeration_derive;
@@ -13,8 +15,8 @@ extern crate enumeration_derive;
 pub use enumeration_derive::Enum;
 
 #[macro_use]
-mod enum_trait;
-pub use enum_trait::{Enum, Enumeration};
+mod enumerate;
+pub use enumerate::{Enum, Enumeration};
 pub mod set;
 pub use set::{EnumSet, __private};
 

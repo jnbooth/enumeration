@@ -1,7 +1,7 @@
 use std::iter::{ExactSizeIterator, FusedIterator, Iterator};
 
 use super::enum_set::EnumSet;
-use crate::enum_trait::{Enum, Enumeration};
+use crate::enumerate::{Enum, Enumeration};
 
 fn enum_fold<T: Enum, B, F>(set: EnumSet<T>, mut fold: F) -> impl FnMut(B, T) -> B
 where
@@ -36,8 +36,8 @@ impl<T: Enum> Iter<T> {
 impl<T: Enum> Clone for Iter<T> {
     fn clone(&self) -> Self {
         Self {
-            set: self.set.clone(),
-            iter: self.iter.clone(),
+            set: self.set,
+            iter: self.iter,
             remaining: self.remaining,
         }
     }

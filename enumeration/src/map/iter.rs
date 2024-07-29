@@ -1,7 +1,7 @@
 use std::iter::{FusedIterator, Iterator, Zip};
 use std::slice;
 
-use crate::enum_trait::{Enum, Enumeration};
+use crate::enumerate::{Enum, Enumeration};
 
 fn map_fold<B, K, From, To>(
     mut f: impl FnMut(From) -> Option<To>,
@@ -39,7 +39,7 @@ impl<K: Enum, V, I: Iterator> Iterator for Iter<K, V, I> {
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some((k, v)) = self.inner.next() {
+        for (k, v) in &mut self.inner {
             if let Some(item) = (self.f)(v) {
                 self.remaining -= 1;
                 return Some((k, item));
@@ -112,8 +112,8 @@ fn drain_fold<'a, B, K: Copy, V: 'a>(
     mut fold: impl FnMut(B, (K, V)) -> B,
     size: &'a mut usize,
 ) -> impl FnMut(B, (K, &'a mut Option<V>)) -> B {
-    move |acc, (k, mut item)| {
-        if matches_mut(k, &mut item, &mut pred) {
+    move |acc, (k, item)| {
+        if matches_mut(k, item, &mut pred) {
             *size -= 1;
             fold(acc, (k, item.take().unwrap()))
         } else {
@@ -147,7 +147,7 @@ impl<'a, K: Enum, V, P: FnMut(K, &mut V) -> bool> Iterator for ExtractIf<'a, K, 
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some((k, v)) = self.inner.next() {
+        for (k, v) in &mut self.inner {
             if matches_mut(k, v, &mut self.pred) {
                 *self.size -= 1;
                 return Some((k, v.take().unwrap()));
@@ -164,7 +164,7 @@ impl<'a, K: Enum, V, P: FnMut(K, &mut V) -> bool> Iterator for ExtractIf<'a, K, 
     #[inline]
     fn count(mut self) -> usize {
         let mut count = 0;
-        while let Some((k, v)) = self.inner.next() {
+        for (k, v) in &mut self.inner {
             if matches_mut(k, v, &mut self.pred) {
                 *v = None;
                 *self.size -= 1;

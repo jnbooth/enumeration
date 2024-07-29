@@ -5,7 +5,7 @@ use std::iter::{FromIterator, Iterator};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
 
 use super::iter::Iter;
-use crate::enum_trait::Enum;
+use crate::enumerate::Enum;
 use crate::wordlike::Wordlike;
 
 #[repr(transparent)]
@@ -427,6 +427,7 @@ impl<T: Enum> PartialEq for EnumSet<T> {
         self.raw == other.raw
     }
 
+    #[allow(clippy::partialeq_ne_impl)]
     #[inline]
     fn ne(&self, other: &Self) -> bool {
         self.raw != other.raw
@@ -435,6 +436,7 @@ impl<T: Enum> PartialEq for EnumSet<T> {
 impl<T: Enum> Eq for EnumSet<T> {}
 
 impl<T: Enum> PartialOrd for EnumSet<T> {
+    #[allow(clippy::non_canonical_partial_ord_impl)]
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.raw.partial_cmp(&other.raw)
@@ -479,7 +481,7 @@ where
     T: Debug,
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        f.debug_list().entries(self.into_iter()).finish()
+        f.debug_list().entries(*self).finish()
     }
 }
 

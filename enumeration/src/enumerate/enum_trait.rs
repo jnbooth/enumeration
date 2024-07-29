@@ -110,7 +110,6 @@ impl<T: Enum> Enum for Option<T> {
             None => T::MIN.bit(),
             Some(e) => e.bit().incr(),
         }
-        .into()
     }
 
     #[cfg_attr(feature = "inline-more", inline)]

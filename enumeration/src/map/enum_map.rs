@@ -6,7 +6,7 @@ use std::{slice, vec};
 
 use super::entry::{Entry, OccupiedEntry, VacantEntry};
 use super::iter::{ExtractIf, Iter};
-use crate::enum_trait::Enum;
+use crate::enumerate::Enum;
 
 /// A lookup map using enumerated types as keys.
 ///
@@ -284,7 +284,7 @@ impl<K: Enum, V> EnumMap<K, V> {
     /// instead of O(len) because it internally visits empty buckets too.
     #[cfg_attr(feature = "inline-more", inline)]
     pub fn into_values(self) -> impl Iterator<Item = V> {
-        self.inner.into_iter().filter_map(std::convert::identity)
+        self.inner.into_iter().flatten()
     }
 
     /// An iterator visiting all key-value pairs.
@@ -761,6 +761,6 @@ impl<K: Enum, V> FromIterator<(K, V)> for EnumMap<K, V> {
 
 impl<K: Enum, V, const N: usize> From<[(K, V); N]> for EnumMap<K, V> {
     fn from(value: [(K, V); N]) -> Self {
-        Self::from_iter(value.into_iter())
+        Self::from_iter(value)
     }
 }

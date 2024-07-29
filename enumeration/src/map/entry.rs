@@ -1,4 +1,4 @@
-use crate::enum_trait::Enum;
+use crate::enumerate::Enum;
 
 /// A view into a single entry in a map, which may either be vacant or occupied.
 ///
