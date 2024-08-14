@@ -145,7 +145,6 @@ impl<K: Enum, V> EnumMap<K, V> {
     /// let mut map: EnumMap<Ordering, i32> = EnumMap::new();
     /// ```
     #[inline]
-    #[must_use]
     pub const fn new() -> Self {
         Self {
             inner: Vec::new(),

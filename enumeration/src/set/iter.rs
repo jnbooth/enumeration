@@ -16,6 +16,7 @@ where
     }
 }
 
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Iter<T: Enum> {
     set: EnumSet<T>,
     iter: Enumeration<T>,
@@ -37,7 +38,7 @@ impl<T: Enum> Clone for Iter<T> {
     fn clone(&self) -> Self {
         Self {
             set: self.set,
-            iter: self.iter,
+            iter: self.iter.clone(),
             remaining: self.remaining,
         }
     }

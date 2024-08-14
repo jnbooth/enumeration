@@ -4,7 +4,8 @@ use std::iter::{ExactSizeIterator, FusedIterator, Iterator};
 
 use super::enum_trait::Enum;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Enumeration<T> {
     pub(super) finished: bool,
     pub(super) start: T,
@@ -54,16 +55,12 @@ impl<T: Enum> Iterator for Enumeration<T> {
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn count(self) -> usize {
-        if self.finished {
-            0
-        } else {
-            self.end.index() + 1 - self.start.index()
-        }
+        self.len()
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let exact = self.count();
+        let exact = self.len();
         (exact, Some(exact))
     }
 }
@@ -110,7 +107,11 @@ impl<T: Enum> FusedIterator for Enumeration<T> {}
 impl<T: Enum> ExactSizeIterator for Enumeration<T> {
     #[inline]
     fn len(&self) -> usize {
-        self.count()
+        if self.finished {
+            0
+        } else {
+            self.end.index() + 1 - self.start.index()
+        }
     }
 }
 
@@ -187,8 +188,7 @@ mod tests {
                 let std_count = DemoEnum::enumerate(x..=y).fold(0, |count, _| count + 1);
                 assert_eq!(
                     our_count, std_count,
-                    "for {:?}..={:?}, {} != {}",
-                    x, y, our_count, std_count
+                    "for {x:?}..={y:?}, {our_count} != {std_count}"
                 );
             }
         }

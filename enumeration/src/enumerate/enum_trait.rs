@@ -206,6 +206,7 @@ impl Enum for Ordering {
         1 << (self as i8 + 1)
     }
 
+    #[allow(clippy::cast_sign_loss)]
     #[cfg_attr(feature = "inline-more", inline)]
     fn index(self) -> usize {
         (self as i8 + 1) as usize
@@ -333,8 +334,7 @@ mod tests {
                     let std_count = E::enumerate(x..=y).fold(0, |count, _| count + 1);
                     assert_eq!(
                         our_count, std_count,
-                        "for {:?}..={:?}, {} != {}",
-                        x, y, our_count, std_count
+                        "for {x:?}..={y:?}, {our_count} != {std_count}"
                     );
                 }
             }

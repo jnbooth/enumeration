@@ -159,6 +159,7 @@ where
     /// assert_eq!(inverse, enums![TextStyle::Italic, TextStyle::Underline]);
     /// ```
     #[inline]
+    #[must_use = "newly constructed set is unused"]
     pub fn inverse(&self) -> Self {
         Self {
             raw: !self.raw & T::Rep::mask(T::SIZE as u32),
@@ -184,6 +185,7 @@ where
     /// assert_eq!(diff, enums![TextStyle::Blink]);
     /// ```
     #[inline]
+    #[must_use = "newly constructed set is unused"]
     pub fn difference(&self, other: &Self) -> Self {
         Self {
             raw: (self.raw | other.raw) ^ other.raw,
@@ -208,6 +210,7 @@ where
     /// assert_eq!(diff, enums![TextStyle::Blink, TextStyle::Underline]);
     /// ```
     #[inline]
+    #[must_use = "newly constructed set is unused"]
     pub fn symmetric_difference(&self, other: &Self) -> Self {
         Self {
             raw: self.raw ^ other.raw,
@@ -231,6 +234,7 @@ where
     /// assert_eq!(intersection, enums![TextStyle::Bold, TextStyle::Italic]);
     /// ```
     #[inline]
+    #[must_use = "newly constructed set is unused"]
     pub fn intersection(&self, other: &Self) -> Self {
         Self {
             raw: (self.raw & other.raw),
@@ -254,6 +258,7 @@ where
     /// assert_eq!(union, enums![TextStyle::Blink, TextStyle::Bold, TextStyle::Italic]);
     /// ```
     #[inline]
+    #[must_use = "newly constructed set is unused"]
     pub fn union(&self, other: &Self) -> Self {
         Self {
             raw: self.raw | other.raw,
@@ -414,6 +419,7 @@ where
 
 impl<T: Enum> Copy for EnumSet<T> {}
 
+#[allow(clippy::expl_impl_clone_on_copy)]
 impl<T: Enum> Clone for EnumSet<T> {
     #[inline]
     fn clone(&self) -> Self {
@@ -593,7 +599,7 @@ impl<'a, T: Enum> Extend<&'a T> for EnumSet<T> {
 
 #[doc(hidden)]
 pub mod __private {
-    use super::*;
+    use super::{Enum, EnumSet};
 
     #[inline]
     pub const fn construct_set<T: Enum>(raw: T::Rep, _type_holder: T) -> EnumSet<T> {
@@ -610,10 +616,10 @@ macro_rules! enums {
         $crate::__private::construct_set($i1.bit(), $i1)
     });
     ($i1:expr, $($i:expr),+ $(,)?) => ({
-        #[cfg(debug_assertions)]
-        let _ = [$i1, $($i),+]; // all items are same type
         #[allow(unused_imports)]
         use $crate::Enum;
+        #[cfg(debug_assertions)]
+        let _ = [$i1, $($i),+]; // all items are same type
         $crate::__private::construct_set($i1.bit()$(|$i.bit())*, $i1)
     });
 }
@@ -654,6 +660,6 @@ mod tests {
             DemoEnum::F,
             DemoEnum::G
         ];
-        assert_eq!(to_vec(set.inverse()), to_vec(inverse))
+        assert_eq!(to_vec(set.inverse()), to_vec(inverse));
     }
 }

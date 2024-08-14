@@ -7,6 +7,9 @@ publish = false
 description = "Enumerable enums with bitwise representation"
 repository = "https://github.com/jnbooth/enumeration"
 
+[lints]
+workspace = true
+
 [dependencies]
 enumeration_derive = { path = "../enumeration_derive", optional = true }
 serde = { version = "1.0.204", optional = true }

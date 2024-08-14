@@ -100,9 +100,8 @@ fn matches_mut<K: Copy, V, P>(key: K, val: &mut Option<V>, pred: &mut P) -> bool
 where
     P: FnMut(K, &mut V) -> bool,
 {
-    let val = match val.as_mut() {
-        Some(val) => val,
-        None => return false,
+    let Some(val) = val.as_mut() else {
+        return false;
     };
     pred(key, val)
 }

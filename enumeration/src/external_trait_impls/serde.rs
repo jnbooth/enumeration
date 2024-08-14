@@ -129,6 +129,7 @@ mod tests {
         }
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn assert_roundtrip_eq<T: Eq + std::fmt::Debug + Serialize + DeserializeOwned>(value: T) {
         let serialized = serde_json::to_value(&value).unwrap();
         let deserialized: T = serde_json::from_value(serialized).unwrap();

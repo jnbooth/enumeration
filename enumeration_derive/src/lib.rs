@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
+#[allow(clippy::wildcard_imports)]
 use syn::*;
 
 #[allow(dead_code)]
@@ -13,6 +14,7 @@ enum SizedEnum {
 /// Probably 32.
 const C_ENUM_BITS: usize = std::mem::size_of::<SizedEnum>() * 8;
 
+#[allow(clippy::too_many_lines)]
 #[proc_macro_derive(Enum)]
 pub fn derive_enum(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemEnum);
@@ -20,9 +22,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
     let name = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    if input.variants.is_empty() {
-        panic!("type must not be empty");
-    }
+    assert!(!input.variants.is_empty(), "type must not be empty");
 
     if let Some(variant) = input.variants.iter().find(|x| x.discriminant.is_some()) {
         return TokenStream::from(
@@ -33,9 +33,8 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
 
     let size = input.variants.len();
 
-    let rep = match rep_for_size(size + 1) {
-        Some(rep) => rep,
-        None => panic!("Too many variants"),
+    let Some(rep) = rep_for_size(size + 1) else {
+        panic!("too many variants");
     };
 
     let min_bound = &input.variants.first().unwrap().ident;
