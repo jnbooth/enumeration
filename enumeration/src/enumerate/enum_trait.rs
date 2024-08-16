@@ -79,57 +79,6 @@ pub trait Enum: Copy + Ord {
     }
 }
 
-impl<T: Enum> Enum for Option<T> {
-    type Rep = T::Rep;
-
-    const SIZE: usize = T::SIZE + 1;
-
-    const MIN: Self = None;
-
-    const MAX: Self = Some(T::MAX);
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn succ(self) -> Option<Self> {
-        match self {
-            None => Some(Some(T::MIN)),
-            Some(e) => e.succ().map(Some),
-        }
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn pred(self) -> Option<Self> {
-        match self {
-            None => None,
-            Some(e) => Some(e.pred()),
-        }
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn bit(self) -> Self::Rep {
-        match self {
-            None => T::MIN.bit(),
-            Some(e) => e.bit().incr(),
-        }
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn index(self) -> usize {
-        match self {
-            None => 0,
-            Some(e) => e.index() + 1,
-        }
-    }
-
-    #[cfg_attr(feature = "inline-more", inline)]
-    fn from_index(i: usize) -> Option<Self> {
-        if i == 0 {
-            Some(None)
-        } else {
-            T::from_index(i - 1).map(Some)
-        }
-    }
-}
-
 impl Enum for bool {
     type Rep = u8;
     const SIZE: usize = 2;
