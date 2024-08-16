@@ -3,7 +3,7 @@ use std::iter::Iterator;
 use std::ops::{Bound, RangeBounds};
 
 use super::iter::Enumeration;
-use crate::Wordlike;
+use crate::wordlike::Wordlike;
 
 pub trait Enum: Copy + Ord {
     /// Bitwise representation of the type.
@@ -21,6 +21,13 @@ pub trait Enum: Copy + Ord {
     ///
     /// Rule: for all `x`, `x.pred() != Some(Self::MAX)`.
     const MAX: Self;
+
+    /// Bitmask with all possible bits set to one.
+    ///
+    /// Rule: `Self::BITMASK == Self::MIN.bit()..=Self::MAX.bit().sum()`.
+    ///
+    /// Note: the standard implementation is `!0 >> (Self::Rep::BITS - Self::SIZE as u32)`.
+    const BITMASK: Self::Rep;
 
     /// Returns `self`'s successor, or `None` if `self == Self::MAX`.
     ///
@@ -84,6 +91,7 @@ impl Enum for bool {
     const SIZE: usize = 2;
     const MIN: Self = false;
     const MAX: Self = true;
+    const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - Self::SIZE as u32);
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn succ(self) -> Option<Self> {
@@ -125,12 +133,10 @@ impl Enum for bool {
 
 impl Enum for Ordering {
     type Rep = u8;
-
     const SIZE: usize = 3;
-
     const MIN: Self = Ordering::Less;
-
     const MAX: Self = Ordering::Greater;
+    const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - Self::SIZE as u32);
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn succ(self) -> Option<Self> {

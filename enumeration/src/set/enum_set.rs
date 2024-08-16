@@ -28,10 +28,29 @@ where
     /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let set: EnumSet<TextStyle> = EnumSet::new();
+    /// assert_eq!(set.len(), 0);
     /// ```
     #[inline]
     pub const fn new() -> Self {
         Self { raw: T::Rep::ZERO }
+    }
+
+    /// Creates an `EnumSet` containing all values.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use enumeration::{Enum, EnumSet};
+    ///
+    /// #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Enum)]
+    /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
+    ///
+    /// let set: EnumSet<TextStyle> = EnumSet::all();
+    /// assert_eq!(set.len(), TextStyle::SIZE);
+    /// ```
+    #[inline]
+    pub const fn all() -> Self {
+        Self { raw: T::BITMASK }
     }
 
     /// Returns the number of elements the set can hold without reallocating.
@@ -46,7 +65,7 @@ where
     /// pub enum TextStyle { Blink, Bold, Highlight, Italic, Strikeout, Underline }
     ///
     /// let set: EnumSet<TextStyle> = EnumSet::new();
-    /// assert!(set.capacity() == 6);
+    /// assert_eq!(set.capacity(), 6);
     /// ```
     #[inline]
     pub const fn capacity(&self) -> usize {
@@ -162,7 +181,7 @@ where
     #[must_use = "newly constructed set is unused"]
     pub fn inverse(&self) -> Self {
         Self {
-            raw: !self.raw & T::Rep::mask(T::SIZE as u32),
+            raw: !self.raw & T::BITMASK,
         }
     }
 
@@ -641,7 +660,7 @@ mod tests {
     #[test]
     fn test_enumerate() {
         let _: EnumSet<DemoEnum> = enums![DemoEnum::A, DemoEnum::C];
-        assert_eq!(to_vec(EnumSet { raw: !0 }), to_vec(Enum::enumerate(..)));
+        assert_eq!(to_vec(EnumSet::all()), to_vec(Enum::enumerate(..)));
     }
 
     #[test]

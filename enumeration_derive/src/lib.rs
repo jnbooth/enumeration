@@ -50,6 +50,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
         const SIZE: usize = #size;
         const MIN: Self = #name::#min_bound;
         const MAX: Self = #name::#max_bound;
+        const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - Self::SIZE as u32);
     };
 
     let idx = match find_repr(&input.attrs) {
