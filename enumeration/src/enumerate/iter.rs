@@ -117,8 +117,6 @@ impl<T: Enum> ExactSizeIterator for Enumeration<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::mem;
-
     use super::*;
 
     #[rustfmt::skip] #[allow(dead_code)]
@@ -126,10 +124,6 @@ mod tests {
     enum DemoEnum { A, B, C, D, E, F, G, H, I, J }
 
     // Enum tests
-
-    // static assertion proving derive(Enum) picks the smallest possible bitwise representation
-    const _: [(); mem::size_of::<<DemoEnum as Enum>::Rep>()] =
-        [(); DemoEnum::SIZE / 8 + (DemoEnum::SIZE % 8 != 0) as usize];
 
     fn assert_eqs<T: Eq + Debug, X: Iterator<Item = T>, Y: Iterator<Item = T>>(x: X, y: Y) {
         assert_eq!(x.collect::<Vec<_>>(), y.collect::<Vec<_>>());

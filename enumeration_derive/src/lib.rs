@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
+use std::convert::TryFrom;
 #[allow(clippy::wildcard_imports)]
 use syn::*;
 
@@ -32,6 +33,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
     }
 
     let size = input.variants.len();
+    let size32 = u32::try_from(size).unwrap();
 
     let Some(rep) = rep_for_size(size + 1) else {
         panic!("too many variants");
@@ -50,7 +52,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream {
         const SIZE: usize = #size;
         const MIN: Self = #name::#min_bound;
         const MAX: Self = #name::#max_bound;
-        const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - Self::SIZE as u32);
+        const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - #size32);
     };
 
     let idx = match find_repr(&input.attrs) {

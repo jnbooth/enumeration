@@ -91,7 +91,7 @@ impl Enum for bool {
     const SIZE: usize = 2;
     const MIN: Self = false;
     const MAX: Self = true;
-    const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - Self::SIZE as u32);
+    const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - 2);
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn succ(self) -> Option<Self> {
@@ -113,12 +113,12 @@ impl Enum for bool {
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn bit(self) -> Self::Rep {
-        1 << (self as u8)
+        1 << u8::from(self)
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn index(self) -> usize {
-        self as usize
+        usize::from(self)
     }
 
     #[cfg_attr(feature = "inline-more", inline)]
@@ -131,12 +131,21 @@ impl Enum for bool {
     }
 }
 
+// Confirm that the representation of Ordering is i8.
+#[allow(clippy::cast_sign_loss)]
+const _: [(); 0] =
+    [(); ((Ordering::Less as i8) + (Ordering::Equal as i8) + (Ordering::Greater as i8)) as usize];
+
+// Confirm that for any Ordering, value + 1 is non-negative.
+#[allow(clippy::cast_sign_loss)]
+const _: [(); 0] = [(); ((Ordering::MIN as i8) + 1) as usize];
+
 impl Enum for Ordering {
     type Rep = u8;
     const SIZE: usize = 3;
     const MIN: Self = Ordering::Less;
     const MAX: Self = Ordering::Greater;
-    const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - Self::SIZE as u32);
+    const BITMASK: Self::Rep = !0 >> (Self::Rep::BITS - 3);
 
     #[cfg_attr(feature = "inline-more", inline)]
     fn succ(self) -> Option<Self> {

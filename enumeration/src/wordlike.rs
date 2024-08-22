@@ -13,7 +13,7 @@ pub trait Wordlike:
     + Ord
 {
     const ZERO: Self;
-    fn count_ones(this: Self) -> u32;
+    fn count_ones(this: Self) -> usize;
     fn incr(self) -> Self;
 }
 
@@ -22,8 +22,8 @@ macro_rules! impl_word {
         impl Wordlike for $n {
             const ZERO: Self = 0;
             #[inline]
-            fn count_ones(this: Self) -> u32 {
-                this.count_ones()
+            fn count_ones(this: Self) -> usize {
+                this.count_ones() as usize
             }
             #[inline]
             fn incr(self) -> Self {

@@ -13,8 +13,9 @@ pub struct EnumSet<T: Enum> {
     raw: T::Rep,
 }
 
-impl<T: Enum> EnumSet<T>
+impl<T> EnumSet<T>
 where
+    T: Enum,
     T::Rep: Wordlike,
 {
     /// Creates an empty `EnumSet`.
@@ -89,7 +90,7 @@ where
     /// ```
     #[inline]
     pub fn len(&self) -> usize {
-        T::Rep::count_ones(self.raw) as usize
+        T::Rep::count_ones(self.raw)
     }
 
     /// Returns `true` if the set contains no elements.
